@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import DesktopWorkspace from './components/layout/DesktopWorkspace.vue'
 import { useNotesStore } from './stores/useNotesStore'
 import type { Task, NoteUpdatePayload } from './stores/useNotesStore'
 import NotesList from './components/notes/NotesList.vue'
 import { useFeedback } from './composables/useFeedback'
 import ActiveNotePanel from './components/notes/ActiveNotePanel.vue'
+import { useCommandShortcuts } from './composables/useCommandShortcuts'
+import type { CommandId } from './composables/useCommandShortcuts'
+import { useEditorBridge, type EditorActions } from './composables/useEditorBridge'
 
 const baseNav = [
   { label: 'Tableau de bord', icon: '🏠' },
@@ -21,6 +24,8 @@ const activeNav = ref('Tableau de bord')
 const lastSyncAt = ref<number | null>(null)
 const { toasts, logs, showToast, dismissToast, pushLog } = useFeedback()
 const initialSyncCompleted = ref(false)
+const { matchEventToCommand, getShortcut, formatShortcutLabel } = useCommandShortcuts()
+const { editorEntry } = useEditorBridge()
 const toastVariants: Record<string, string> = {
   info: 'bg-ink text-white',
   success: 'bg-emerald-500 text-white',
@@ -34,12 +39,82 @@ const logBadgeVariants: Record<string, string> = {
 }
 const lastSyncedPayload = new Map<string, string>()
 
+function shortcutLabelFor(id: CommandId) {
+  const combo = getShortcut(id)
+  return combo ? formatShortcutLabel(combo) : null
+}
+
+const shortcutHints = computed(() => ({
+  createNote: shortcutLabelFor('create-note'),
+}))
+
+function triggerEditorAction(action: keyof EditorActions) {
+  const actions = editorEntry.value.actions
+  if (!actions || typeof actions[action] !== 'function') {
+    showToast('Ouvrez une note pour insérer un bloc', 'info')
+    pushLog('info', 'Commande ignorée : aucun éditeur actif')
+    return
+  }
+  Promise.resolve(actions[action]())
+    .catch((err) => {
+      console.error('Editor action failed', err)
+      showToast("Impossible d'insérer le bloc", 'error')
+    })
+}
+
+function executeCommand(commandId: CommandId | null) {
+  if (!commandId) return false
+  switch (commandId) {
+    case 'create-note':
+      void handleCreateNote()
+      return true
+    case 'duplicate-note':
+      if (!currentNoteId.value) {
+        showToast('Aucune note à dupliquer', 'info')
+        return false
+      }
+      void handleDuplicateActiveNote()
+      return true
+    case 'insert-text-block':
+      triggerEditorAction('insertTextBlock')
+      return true
+    case 'insert-checklist-block':
+      triggerEditorAction('insertChecklistBlock')
+      return true
+    case 'insert-code-block':
+      triggerEditorAction('insertCodeBlock')
+      return true
+    default:
+      return false
+  }
+}
+
+function handleGlobalKeydown(event: KeyboardEvent) {
+  if (event.defaultPrevented) return
+  const commandId = matchEventToCommand(event)
+  if (!commandId) return
+  const handled = executeCommand(commandId)
+  if (handled) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+}
+
 onMounted(async () => {
   try {
     await store.refresh()
     lastSyncAt.value = Date.now()
   } finally {
     initialSyncCompleted.value = true
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', handleGlobalKeydown, true)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleGlobalKeydown, true)
   }
 })
 
@@ -57,6 +132,18 @@ watch(
 
 const recentLogs = computed(() => logs.value.slice(0, 6))
 const isBackgroundSyncing = computed(() => initialSyncCompleted.value && store.loading.value)
+
+const quickFlow = computed(() => {
+  const notes = store.notes.value
+  const reviewCount = notes.filter((note) => note.status?.toLowerCase().includes('rev')).length
+  const pendingBlocks = notes.reduce((sum, note) => sum + (note.blocks?.length || 0), 0)
+  const lastSyncLabel = lastSyncAt.value ? formatRelativeTime(lastSyncAt.value) : '—'
+  return {
+    reviewCount,
+    pendingBlocks,
+    lastSyncLabel,
+  }
+})
 
 watch(
   () => store.error.value,
@@ -111,6 +198,7 @@ const activeDesktopNote = computed(() => {
       id: 'placeholder',
       title: 'Aucune note active',
       owner: 'Studio Produit',
+      status: 'Brouillon',
       tags: ['Produit'],
       summary: 'Créez votre première note pour remplir ce panneau.',
       checklist: [],
@@ -122,6 +210,7 @@ const activeDesktopNote = computed(() => {
     id: note.id,
     title: note.title || 'Sans titre',
     owner: note.status ? `Statut : ${note.status}` : 'Sans statut',
+    status: note.status || 'Brouillon',
     tags: note.tags?.length ? note.tags : ['Produit'],
     summary: note.summary || 'Aucun résumé',
     checklist: (note.tasks || []).map((task) => ({ id: task.id, label: task.label, done: task.done })),
@@ -396,6 +485,7 @@ function serializeSyncPayload(payload: {
         :timeline="timeline"
         :mode="activeNav === 'Paramètres' ? 'settings' : 'workspace'"
         :quick-flow="quickFlow"
+        :shortcut-hints="shortcutHints"
         @create-note="handleCreateNote"
         @share="handleShare"
         @view-all="handleViewAll"

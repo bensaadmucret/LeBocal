@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, ref, watch, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
 import TagPill from '../common/TagPill.vue'
 import EditorCanvas from '../editor/EditorCanvas.vue'
+import { useEditorBridge } from '../../composables/useEditorBridge'
 
 type ChecklistItem = { id?: string; label: string; done: boolean }
 type BlockItem = { id?: string; type: string; data: Record<string, unknown> }
@@ -44,6 +45,14 @@ const localStatus = ref('Brouillon')
 const localTags = ref<string[]>([])
 const newTag = ref('')
 const syncing = ref(false)
+type EditorCanvasInstance = ComponentPublicInstance & {
+  insertTextBlock: (content: string) => Promise<void>
+  insertChecklistBlock: () => Promise<void>
+  insertCodeBlock: () => Promise<void>
+}
+const editorCanvas = ref<EditorCanvasInstance | null>(null)
+const { registerEditor, unregisterEditor } = useEditorBridge()
+const editorToken = Symbol('active-note-editor')
 
 watch(
   () => props.note,
@@ -69,6 +78,38 @@ watch(
   },
   { deep: true },
 )
+
+function syncEditorBridge() {
+  const instance = editorCanvas.value
+  if (!instance) {
+    unregisterEditor(editorToken)
+    return
+  }
+  registerEditor(editorToken, {
+    insertTextBlock: (content = 'Nouveau paragraphe') => instance.insertTextBlock(content),
+    insertChecklistBlock: () => instance.insertChecklistBlock(),
+    insertCodeBlock: () => instance.insertCodeBlock(),
+  })
+}
+
+watch(editorCanvas, () => {
+  nextTick(() => syncEditorBridge())
+})
+
+watch(
+  () => props.note.id,
+  () => {
+    nextTick(() => syncEditorBridge())
+  },
+)
+
+onMounted(() => {
+  nextTick(() => syncEditorBridge())
+})
+
+onBeforeUnmount(() => {
+  unregisterEditor(editorToken)
+})
 
 function toggleTask(index: number) {
   localChecklist.value = localChecklist.value.map((task, idx) =>
@@ -199,7 +240,7 @@ function removeTag(tag: string) {
         <span class="text-xs text-gray-400">{{ localBlocks.length }} bloc(s)</span>
       </div>
       <div class="mt-3">
-        <EditorCanvas v-model="localBlocks" />
+        <EditorCanvas ref="editorCanvas" v-model="localBlocks" />
       </div>
     </div>
 

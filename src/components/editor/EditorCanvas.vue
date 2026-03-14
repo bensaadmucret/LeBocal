@@ -105,9 +105,26 @@ function cryptoId() {
   return `${Date.now()}-${Math.random()}`
 }
 
-async function insertTextBlock(content: string) {
+async function insertTextBlock(content = 'Nouveau paragraphe') {
   if (!editor || !content.trim()) return
   await editor.blocks.insert('paragraph', { text: content.trim() }, undefined, undefined, undefined, false)
+}
+
+async function insertChecklistBlock() {
+  if (!editor) return
+  await editor.blocks.insert(
+    'checklist',
+    { items: [{ text: 'Nouvelle tâche', checked: false }] },
+    undefined,
+    undefined,
+    undefined,
+    false,
+  )
+}
+
+async function insertCodeBlock() {
+  if (!editor) return
+  await editor.blocks.insert('code', { code: '// Nouveau snippet' }, undefined, undefined, undefined, false)
 }
 
 async function saveBlocks(): Promise<Block[]> {
@@ -118,6 +135,8 @@ async function saveBlocks(): Promise<Block[]> {
 
 defineExpose({
   insertTextBlock,
+  insertChecklistBlock,
+  insertCodeBlock,
   saveBlocks,
   isReady,
 })

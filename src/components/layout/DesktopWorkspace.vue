@@ -3,14 +3,17 @@ import { computed } from 'vue'
 import StatsGrid from '../common/StatsGrid.vue'
 import NotesList from '../notes/NotesList.vue'
 import ActiveNotePanel from '../notes/ActiveNotePanel.vue'
+import ShortcutSettings from '../settings/ShortcutSettings.vue'
 
 const props = defineProps<{
   navItems: { label: string; icon: string; active?: boolean }[]
   stats: { title: string; value: number; detail: string }[]
   notes: { id: string; title: string; category: string; excerpt: string; status: string; updated: string }[]
   activeNote: {
+    id: string
     title: string
     owner: string
+    status: string
     tags: string[]
     summary: string
     checklist: { id?: string; label: string; done: boolean }[]
@@ -20,6 +23,7 @@ const props = defineProps<{
   timeline: { time: string; event: string }[]
   mode?: 'workspace' | 'settings'
   quickFlow?: { reviewCount: number; pendingBlocks: number; lastSyncLabel: string }
+  shortcutHints?: { createNote?: string | null }
 }>()
 
 const emit = defineEmits([
@@ -66,8 +70,11 @@ const quickFlow = computed(() =>
             <li>· {{ quickFlow.pendingBlocks }} blocs en cours</li>
             <li>· Dernière synchro : {{ quickFlow.lastSyncLabel }}</li>
           </ul>
-          <button class="mt-4 w-full rounded-full bg-royal py-2 text-white" @click="emit('create-note')">
-            Nouvelle note
+          <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-royal py-2 text-white" @click="emit('create-note')">
+            <span>Nouvelle note</span>
+            <span v-if="props.shortcutHints?.createNote" class="rounded-full bg-white/20 px-2 py-0.5 text-[11px] tracking-wide">
+              {{ props.shortcutHints.createNote }}
+            </span>
           </button>
         </div>
       </aside>
@@ -120,10 +127,20 @@ const quickFlow = computed(() =>
           />
         </div>
 
-        <div v-else class="rounded-[36px] bg-white/90 p-10 text-center ring-1 ring-black/5">
-          <p class="text-sm uppercase tracking-[0.4em] text-gray-400">Paramètres</p>
-          <h1 class="mt-3 font-display text-3xl text-ink">Centre de configuration</h1>
-          <p class="mt-4 text-base text-gray-500">Cette page sera bientôt disponible pour ajuster vos préférences d’application.</p>
+        <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
+          <ShortcutSettings />
+          <div class="rounded-[32px] border border-dashed border-gray-200 bg-white/80 p-6 text-left">
+            <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Bientôt disponible</p>
+            <h3 class="mt-3 font-display text-xl text-ink">Gestion du compte &amp; préférences</h3>
+            <p class="mt-2 text-sm text-gray-500">
+              Utilisez déjà l’espace de raccourcis clavier pendant que nous préparons la gestion des profils, l’équipe et les contrôles de confidentialité.
+            </p>
+            <ul class="mt-4 space-y-2 text-sm text-gray-500">
+              <li>· Profil et avatar</li>
+              <li>· Connexions cloud</li>
+              <li>· Préférences de notifications</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
