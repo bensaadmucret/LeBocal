@@ -4,6 +4,19 @@ import StatsGrid from '../common/StatsGrid.vue'
 import NotesList from '../notes/NotesList.vue'
 import ActiveNotePanel from '../notes/ActiveNotePanel.vue'
 import ShortcutSettings from '../settings/ShortcutSettings.vue'
+import BudgetWorkspace from '../budget/BudgetWorkspace.vue'
+import type {
+  BudgetAccount,
+  BudgetAlert,
+  BudgetCategory,
+  BudgetTransaction,
+  BudgetTransactionType,
+  BudgetTripPlan,
+  BudgetTripPlanInput,
+  BudgetBankProfile,
+  BudgetBankProfileInput,
+} from '../../stores/useBudgetStore'
+import type { Block } from '../../stores/useNotesStore'
 
 const props = defineProps<{
   navItems: { label: string; icon: string; active?: boolean }[]
@@ -18,12 +31,38 @@ const props = defineProps<{
     summary: string
     checklist: { id?: string; label: string; done: boolean }[]
     highlights: string[]
-    blocks: { id?: string; type: string; data: Record<string, unknown> }[]
+    blocks: Block[]
   }
   timeline: { time: string; event: string }[]
-  mode?: 'workspace' | 'settings'
+  mode?: 'workspace' | 'settings' | 'budget'
   quickFlow?: { reviewCount: number; pendingBlocks: number; lastSyncLabel: string }
   shortcutHints?: { createNote?: string | null }
+  budgetSummary?: {
+    totalBalance: number
+    currency: string
+    accountCount: number
+    targets?: { label: string; progress: number; remaining: number } | null
+  }
+  budgetAccounts?: BudgetAccount[]
+  budgetTransactions?: (BudgetTransaction & {
+    accountName?: string
+    categoryName?: string
+    categoryColor?: string
+  })[]
+  budgetAlerts?: BudgetAlert[]
+  budgetCategories?: { id: string; name: string; total: number; type: BudgetTransactionType; color?: string; icon?: string }[]
+  budgetCategoryOptions?: BudgetCategory[]
+  budgetNotes?: { id: string; title: string }[]
+  budgetNoteTransactions?: Record<string, (BudgetTransaction & {
+    accountName?: string
+    categoryName?: string
+    categoryColor?: string
+  })[]>
+  budgetLoading?: boolean
+  budgetTripPlans?: BudgetTripPlan[]
+  budgetBankProfiles?: BudgetBankProfile[]
+  budgetPlannerOpen?: boolean
+  budgetPlannerMode?: 'vacation' | 'bank'
 }>()
 
 const emit = defineEmits([
@@ -35,12 +74,55 @@ const emit = defineEmits([
   'edit-note',
   'delete-note',
   'select-nav',
+  'create-budget-account',
+  'update-budget-account',
+  'delete-budget-account',
+  'create-budget-transaction',
+  'update-budget-transaction',
+  'delete-budget-transaction',
+  'link-budget-transaction-note',
+  'save-budget-trip',
+  'delete-budget-trip',
+  'create-bank-profile',
+  'update-bank-profile',
+  'delete-bank-profile',
+  'open-budget-planner',
+  'close-budget-planner',
+  'refresh-budget',
 ])
 
 const mode = computed(() => props.mode ?? 'workspace')
 const quickFlow = computed(() =>
   props.quickFlow || { reviewCount: 0, pendingBlocks: 0, lastSyncLabel: '—' },
 )
+
+function forwardSaveTrip(payload: BudgetTripPlanInput) {
+  emit('save-budget-trip', payload)
+}
+
+function forwardDeleteTrip(planId: string) {
+  emit('delete-budget-trip', planId)
+}
+
+function forwardCreateBankProfile(payload: BudgetBankProfileInput) {
+  emit('create-bank-profile', payload)
+}
+
+function forwardUpdateBankProfile(payload: { profileId: string; input: Partial<BudgetBankProfileInput> }) {
+  emit('update-bank-profile', payload)
+}
+
+function forwardDeleteBankProfile(profileId: string) {
+  emit('delete-bank-profile', profileId)
+}
+
+function forwardOpenPlanner(mode: 'vacation' | 'bank') {
+  emit('open-budget-planner', mode)
+}
+
+function forwardClosePlanner() {
+  emit('close-budget-planner')
+}
 </script>
 
 <template>
@@ -121,13 +203,14 @@ const quickFlow = computed(() =>
           <ActiveNotePanel
             :note="props.activeNote"
             :timeline="props.timeline"
+            :budget-transactions="props.budgetNoteTransactions?.[props.activeNote.id] || []"
             @update-note="emit('update-active-note', $event)"
             @edit-note="(id) => emit('edit-note', id)"
             @delete-note="(id) => emit('delete-note', id ?? props.activeNote.id)"
           />
         </div>
 
-        <div v-else class="grid gap-6 lg:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
+        <div v-else-if="mode === 'settings'" class="grid gap-6 lg:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
           <ShortcutSettings />
           <div class="rounded-[32px] border border-dashed border-gray-200 bg-white/80 p-6 text-left">
             <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Bientôt disponible</p>
@@ -140,6 +223,42 @@ const quickFlow = computed(() =>
               <li>· Connexions cloud</li>
               <li>· Préférences de notifications</li>
             </ul>
+          </div>
+        </div>
+
+        <div v-else-if="mode === 'budget'">
+          <BudgetWorkspace
+            v-if="props.budgetSummary && props.budgetAccounts && props.budgetTransactions && props.budgetCategories && props.budgetCategoryOptions && props.budgetNotes"
+            :summary="props.budgetSummary"
+            :accounts="props.budgetAccounts"
+            :transactions="props.budgetTransactions"
+            :alerts="props.budgetAlerts || []"
+            :categories="props.budgetCategories"
+            :category-options="props.budgetCategoryOptions"
+            :notes="props.budgetNotes"
+            :trip-plans="props.budgetTripPlans || []"
+            :bank-profiles="props.budgetBankProfiles || []"
+            :planner-open="props.budgetPlannerOpen || false"
+            :planner-mode="props.budgetPlannerMode || 'vacation'"
+            :loading="props.budgetLoading"
+            @create-account="(payload) => emit('create-budget-account', payload)"
+            @update-account="(payload) => emit('update-budget-account', payload)"
+            @delete-account="(accountId) => emit('delete-budget-account', accountId)"
+            @create-transaction="(payload) => emit('create-budget-transaction', payload)"
+            @update-transaction="(payload) => emit('update-budget-transaction', payload)"
+            @delete-transaction="(transactionId) => emit('delete-budget-transaction', transactionId)"
+            @link-transaction-note="(payload) => emit('link-budget-transaction-note', payload)"
+            @save-trip="forwardSaveTrip"
+            @delete-trip="forwardDeleteTrip"
+            @create-bank-profile="forwardCreateBankProfile"
+            @update-bank-profile="forwardUpdateBankProfile"
+            @delete-bank-profile="forwardDeleteBankProfile"
+            @open-planner="forwardOpenPlanner"
+            @close-planner="forwardClosePlanner"
+            @refresh="() => emit('refresh-budget')"
+          />
+          <div v-else class="rounded-[32px] bg-white/90 p-6 text-center text-sm text-gray-500">
+            Chargement du module budget…
           </div>
         </div>
       </div>

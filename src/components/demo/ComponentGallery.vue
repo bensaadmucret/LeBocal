@@ -6,14 +6,17 @@ import TagPill from '../common/TagPill.vue'
 
 const props = defineProps<{
   stats: { title: string; value: number; detail: string }[]
-  notes: { title: string; category: string; excerpt: string; status: string; updated: string }[]
+  notes: { id: string; title: string; category: string; excerpt: string; status: string; updated: string }[]
   activeNote: {
+    id: string
     title: string
     owner: string
+    status: string
     tags: string[]
     summary: string
-    checklist: { label: string; done: boolean }[]
+    checklist: { id?: string; label: string; done: boolean }[]
     highlights: string[]
+    blocks: { id: string; type: string; data: Record<string, unknown> }[]
   }
   timeline: { time: string; event: string }[]
 }>()

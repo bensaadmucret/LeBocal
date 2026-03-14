@@ -12,6 +12,8 @@ Le Bocal est une application desktop (Tauri + Vue 3) pensée pour l’écriture 
 - **Confirmation de suppression** : overlay personnalisé pour éviter les suppressions accidentelles
 - **Palette de commandes clavier** : raccourcis globaux configurables pour créer/dupliquer des notes et insérer des blocs Editor.js
 - **Page Paramètres** : gestion des raccourcis personnalisés (capture, détection des conflits, reset)
+- **Budget Workspace** : suivi des comptes (banque, vacances, épargne, cash) avec tableau transactions et note-linking rapide
+- **Planificateur vacances / banques** : modale multi-sections (période, transports cumulables, hébergement par nuit, activités, alertes, notes) et bloc indépendant pour gérer plusieurs profils bancaires
 
 ## Stack technique
 
@@ -61,6 +63,7 @@ Les raccourcis sont stockés dans `localStorage` côté client (mode mock) et se
 
 - Duplication intelligente (sélection des éléments à copier)
 - Historique des versions / snapshots
+- Raccourcis additionnels pour déclencher directement l’ouverture du planner budget et filtrer les transactions
 - Gestion de compte (profil, connexions cloud, notifications)
 
 Contributions bienvenues (issues, PR). Ouvre simplement une branche et propose un changelog clair.

@@ -2,7 +2,15 @@
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import DesktopWorkspace from './components/layout/DesktopWorkspace.vue'
 import { useNotesStore } from './stores/useNotesStore'
-import type { Task, NoteUpdatePayload } from './stores/useNotesStore'
+import type { Task, NoteUpdatePayload, Block } from './stores/useNotesStore'
+import { useBudgetStore } from './stores/useBudgetStore'
+import type {
+  BudgetAccountInput,
+  BudgetTransactionInput,
+  BudgetTransaction,
+  BudgetTripPlanInput,
+  BudgetBankProfileInput,
+} from './stores/useBudgetStore'
 import NotesList from './components/notes/NotesList.vue'
 import { useFeedback } from './composables/useFeedback'
 import ActiveNotePanel from './components/notes/ActiveNotePanel.vue'
@@ -13,10 +21,12 @@ import { useEditorBridge, type EditorActions } from './composables/useEditorBrid
 const baseNav = [
   { label: 'Tableau de bord', icon: '🏠' },
   { label: 'Notes', icon: '🗒️' },
+  { label: 'Budget', icon: '💶' },
   { label: 'Paramètres', icon: '⚙️' },
 ]
 
 const store = useNotesStore()
+const budgetStore = useBudgetStore()
 const showAllNotes = ref(false)
 const showEditorModal = ref(false)
 const pendingDeleteId = ref<string | null>(null)
@@ -26,10 +36,174 @@ const { toasts, logs, showToast, dismissToast, pushLog } = useFeedback()
 const initialSyncCompleted = ref(false)
 const { matchEventToCommand, getShortcut, formatShortcutLabel } = useCommandShortcuts()
 const { editorEntry } = useEditorBridge()
+type PlannerMode = 'vacation' | 'bank'
+
 const toastVariants: Record<string, string> = {
   info: 'bg-ink text-white',
   success: 'bg-emerald-500 text-white',
   error: 'bg-rose-600 text-white',
+}
+
+function handleOpenBudgetPlanner(mode: PlannerMode) {
+  openBudgetPlanner(mode)
+}
+
+function handleCloseBudgetPlanner() {
+  closeBudgetPlanner()
+}
+
+async function handleCreateBudgetAccount(payload: BudgetAccountInput & { target?: number | null; alertThreshold?: number | null }) {
+  try {
+    await budgetStore.createAccount(payload)
+    showToast('Compte budget créé', 'success')
+    pushLog('success', `Compte créé : ${payload.name}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Impossible de créer le compte"
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleCreateBudgetTransaction(payload: BudgetTransactionInput) {
+  try {
+    await budgetStore.recordTransaction(payload)
+    showToast('Transaction enregistrée', 'success')
+    pushLog('success', `Transaction ${payload.type === 'expense' ? 'débit' : 'crédit'} enregistrée`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Impossible d'enregistrer la transaction"
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleUpdateBudgetAccount({ accountId, input }: { accountId: string; input: Partial<BudgetAccountInput> & { target?: number | null; alertThreshold?: number | null } }) {
+  try {
+    await budgetStore.updateAccount(accountId, input)
+    showToast('Compte mis à jour', 'success')
+    pushLog('success', `Compte mis à jour : ${input.name || accountId}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de mettre à jour le compte'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleDeleteBudgetAccount(accountId: string) {
+  try {
+    await budgetStore.deleteAccount(accountId)
+    showToast('Compte supprimé', 'info')
+    pushLog('info', `Compte supprimé : ${accountId}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Suppression du compte impossible'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleUpdateBudgetTransaction({ transactionId, input }: { transactionId: string; input: Partial<BudgetTransactionInput> }) {
+  try {
+    await budgetStore.updateTransaction(transactionId, input)
+    showToast('Transaction mise à jour', 'success')
+    pushLog('success', `Transaction mise à jour : ${transactionId}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de mettre à jour la transaction'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleDeleteBudgetTransaction(transactionId: string) {
+  try {
+    await budgetStore.deleteTransaction(transactionId)
+    showToast('Transaction supprimée', 'info')
+    pushLog('info', `Transaction supprimée : ${transactionId}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Suppression de la transaction impossible'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleLinkBudgetTransactionNote({ transactionId, noteId }: { transactionId: string; noteId: string | null }) {
+  try {
+    await budgetStore.linkTransactionToNote(transactionId, noteId)
+    showToast(noteId ? 'Transaction associée à la note' : 'Association retirée', 'success')
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Association impossible'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleSaveBudgetTripPlan(payload: BudgetTripPlanInput) {
+  try {
+    await budgetStore.saveTripPlan(payload)
+    showToast(payload.id ? 'Plan vacances mis à jour' : 'Plan vacances enregistré', 'success')
+    pushLog('success', `Plan vacances ${payload.id ? 'mis à jour' : 'créé'} : ${payload.title}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de sauvegarder le plan vacances'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleDeleteBudgetTripPlan(planId: string) {
+  try {
+    await budgetStore.deleteTripPlan(planId)
+    showToast('Plan vacances supprimé', 'info')
+    pushLog('info', `Plan vacances supprimé : ${planId}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de supprimer le plan'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleCreateBankProfile(payload: BudgetBankProfileInput) {
+  try {
+    await budgetStore.createBankProfile(payload)
+    showToast('Banque ajoutée', 'success')
+    pushLog('success', `Banque ajoutée : ${payload.bankName}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de créer le compte bancaire'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleUpdateBankProfile({ profileId, input }: { profileId: string; input: Partial<BudgetBankProfileInput> }) {
+  try {
+    await budgetStore.updateBankProfile(profileId, input)
+    showToast('Banque mise à jour', 'success')
+    pushLog('success', `Banque mise à jour : ${input.bankName || profileId}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de mettre à jour la banque'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleDeleteBankProfile(profileId: string) {
+  try {
+    await budgetStore.deleteBankProfile(profileId)
+    showToast('Banque supprimée', 'info')
+    pushLog('info', `Banque supprimée : ${profileId}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de supprimer la banque'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleRefreshBudget() {
+  try {
+    await budgetStore.refresh()
+    showToast('Budget synchronisé', 'info')
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de rafraîchir le budget'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
 }
 
 const logBadgeVariants: Record<string, string> = {
@@ -47,6 +221,9 @@ function shortcutLabelFor(id: CommandId) {
 const shortcutHints = computed(() => ({
   createNote: shortcutLabelFor('create-note'),
 }))
+
+const budgetPlannerOpen = ref(false)
+const budgetPlannerMode = ref<PlannerMode>('vacation')
 
 function triggerEditorAction(action: keyof EditorActions) {
   const actions = editorEntry.value.actions
@@ -66,6 +243,10 @@ function executeCommand(commandId: CommandId | null) {
   if (!commandId) return false
   switch (commandId) {
     case 'create-note':
+      if (workspaceMode.value === 'budget') {
+        openBudgetPlanner('vacation')
+        return true
+      }
       void handleCreateNote()
       return true
     case 'duplicate-note':
@@ -102,7 +283,7 @@ function handleGlobalKeydown(event: KeyboardEvent) {
 
 onMounted(async () => {
   try {
-    await store.refresh()
+    await Promise.all([store.refresh(), budgetStore.refresh()])
     lastSyncAt.value = Date.now()
   } finally {
     initialSyncCompleted.value = true
@@ -145,8 +326,129 @@ const quickFlow = computed(() => {
   }
 })
 
+const workspaceMode = computed(() => {
+  if (activeNav.value === 'Paramètres') return 'settings'
+  if (activeNav.value === 'Budget') return 'budget'
+  return 'workspace'
+})
+
+const budgetSummary = computed(() => {
+  const accounts = budgetStore.accounts.value
+  const currency = budgetStore.preferences.value.defaultCurrency || 'EUR'
+  const targetAccount = accounts.find((account) => typeof account.target === 'number' && account.target > 0)
+  const targets = targetAccount?.target
+    ? {
+        label: targetAccount.name,
+        progress: Math.min(100, (targetAccount.balance / targetAccount.target) * 100 || 0),
+        remaining: Math.max(0, Math.round((targetAccount.target - targetAccount.balance) * 100) / 100),
+      }
+    : null
+  return {
+    totalBalance: budgetStore.totalBalance.value,
+    currency,
+    accountCount: accounts.length,
+    targets,
+  }
+})
+
+const budgetCategoryBreakdown = computed(() => {
+  const totals: Record<string, number> = {}
+  for (const transaction of budgetStore.transactions.value) {
+    totals[transaction.categoryId] = (totals[transaction.categoryId] || 0) + transaction.amount
+  }
+  return budgetStore.categories.value
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      total: Math.round((totals[category.id] || 0) * 100) / 100,
+      type: category.type,
+      color: category.color,
+      icon: category.icon,
+    }))
+    .filter((category) => category.total !== 0)
+})
+
+const budgetTransactionsDisplay = computed(() => {
+  const accounts = budgetStore.accounts.value
+  const categories = budgetStore.categories.value
+  const fallbackCurrency = budgetStore.preferences.value.defaultCurrency || 'EUR'
+  return budgetStore.transactions.value.map((transaction) => {
+    const account = accounts.find((acct) => acct.id === transaction.accountId)
+    const category = categories.find((cat) => cat.id === transaction.categoryId)
+    return {
+      ...transaction,
+      accountName: account?.name,
+      accountCurrency: account?.currency || fallbackCurrency,
+      categoryName: category?.name,
+      categoryColor: category?.color,
+    }
+  })
+})
+
+const budgetNotes = computed(() =>
+  store.notes.value.map((note) => ({
+    id: note.id,
+    title: note.title || 'Sans titre',
+  })),
+)
+
+const budgetTripPlans = computed(() => budgetStore.tripPlans.value)
+const budgetBankProfiles = computed(() => budgetStore.bankProfiles.value)
+
+const budgetNoteTransactions = computed(() => {
+  const accounts = budgetStore.accounts.value
+  const categories = budgetStore.categories.value
+  const fallbackCurrency = budgetStore.preferences.value.defaultCurrency || 'EUR'
+  return budgetStore.transactions.value.reduce(
+    (acc, transaction) => {
+      if (!transaction.noteId) return acc
+      const account = accounts.find((acct) => acct.id === transaction.accountId)
+      const category = categories.find((cat) => cat.id === transaction.categoryId)
+      if (!acc[transaction.noteId]) acc[transaction.noteId] = []
+      acc[transaction.noteId].push({
+        ...transaction,
+        accountName: account?.name,
+        categoryName: category?.name,
+        currency: account?.currency || fallbackCurrency,
+      })
+      return acc
+    },
+    {} as Record<string, (BudgetTransaction & { accountName?: string; categoryName?: string; currency?: string })[]>,
+  )
+})
+
+const budgetLoading = computed(() => budgetStore.loading.value)
+
+function openBudgetPlanner(mode: PlannerMode) {
+  budgetPlannerMode.value = mode
+  budgetPlannerOpen.value = true
+}
+
+function closeBudgetPlanner() {
+  budgetPlannerOpen.value = false
+}
+
+watch(
+  () => workspaceMode.value,
+  (mode) => {
+    if (mode !== 'budget' && budgetPlannerOpen.value) {
+      closeBudgetPlanner()
+    }
+  },
+)
+
 watch(
   () => store.error.value,
+  (message) => {
+    if (message) {
+      showToast(message, 'error')
+      pushLog('error', message)
+    }
+  },
+)
+
+watch(
+  () => budgetStore.error.value,
   (message) => {
     if (message) {
       showToast(message, 'error')
@@ -206,6 +508,10 @@ const activeDesktopNote = computed(() => {
       blocks: [],
     }
   }
+  const normalizedBlocks: Block[] = (note.blocks || []).map((block, index) => ({
+    ...block,
+    id: block.id || `block-${index}`,
+  }))
   return {
     id: note.id,
     title: note.title || 'Sans titre',
@@ -213,11 +519,11 @@ const activeDesktopNote = computed(() => {
     status: note.status || 'Brouillon',
     tags: note.tags?.length ? note.tags : ['Produit'],
     summary: note.summary || 'Aucun résumé',
-    checklist: (note.tasks || []).map((task) => ({ id: task.id, label: task.label, done: task.done })),
+    checklist: (note.tasks || []).map((task, index) => ({ id: task.id || `task-${index}`, label: task.label, done: task.done })),
     highlights: note.blocks?.length
-      ? note.blocks.map((block) => `Bloc ${block.type || block.kind}`)
+      ? note.blocks.map((block) => `Bloc ${block.type || 'texte'}`)
       : ['Ajoutez des blocs pour enrichir la note.'],
-    blocks: note.blocks || [],
+    blocks: normalizedBlocks,
   }
 })
 
@@ -243,6 +549,9 @@ async function handleSelectNote(id: string) {
 
 function handleNavSelect(label: string) {
   activeNav.value = label
+  if (label !== 'Budget' && budgetPlannerOpen.value) {
+    closeBudgetPlanner()
+  }
   pushLog('info', `Section ${label} ouverte`)
 }
 
@@ -278,15 +587,21 @@ function handleModalSave() {
 }
 
 async function handleUpdateActiveNote(payload: {
-  status?: string
-  summary?: string
-  tasks?: Task[]
-  blocks?: { id?: string; type: string; data: Record<string, unknown> }[]
-  tags?: string[]
+  status: string
+  summary: string
+  tasks: { id?: string; label: string; done: boolean }[]
+  blocks: Block[]
+  tags: string[]
 }) {
   const noteId = currentNoteId.value
   if (!noteId) return
-  const normalized = normalizeSyncPayload(payload)
+  const normalized = normalizeSyncPayload({
+    status: payload.status,
+    summary: payload.summary,
+    tasks: payload.tasks.map((task, index) => ({ id: task.id || `task-${index}`, label: task.label, done: !!task.done })),
+    blocks: payload.blocks.map((block, index) => ({ ...block, id: block.id || `block-${index}`, data: { ...block.data } })),
+    tags: payload.tags,
+  })
   const serialized = serializeSyncPayload(normalized)
   if (lastSyncedPayload.get(noteId) === serialized) return
   lastSyncedPayload.set(noteId, serialized)
@@ -483,9 +798,22 @@ function serializeSyncPayload(payload: {
         :notes="workspaceNotes"
         :active-note="activeDesktopNote"
         :timeline="timeline"
-        :mode="activeNav === 'Paramètres' ? 'settings' : 'workspace'"
+        :mode="workspaceMode"
         :quick-flow="quickFlow"
         :shortcut-hints="shortcutHints"
+        :budget-summary="budgetSummary"
+        :budget-accounts="budgetStore.accounts.value"
+        :budget-transactions="budgetTransactionsDisplay"
+        :budget-alerts="budgetStore.alerts.value"
+        :budget-categories="budgetCategoryBreakdown"
+        :budget-category-options="budgetStore.categories.value"
+        :budget-notes="budgetNotes"
+        :budget-note-transactions="budgetNoteTransactions"
+        :budget-loading="budgetLoading"
+        :budget-trip-plans="budgetTripPlans"
+        :budget-bank-profiles="budgetBankProfiles"
+        :budget-planner-open="budgetPlannerOpen"
+        :budget-planner-mode="budgetPlannerMode"
         @create-note="handleCreateNote"
         @share="handleShare"
         @view-all="handleViewAll"
@@ -494,6 +822,21 @@ function serializeSyncPayload(payload: {
         @edit-note="openEditorModal"
         @delete-note="promptDeleteNote"
         @select-nav="handleNavSelect"
+        @create-budget-account="handleCreateBudgetAccount"
+        @update-budget-account="handleUpdateBudgetAccount"
+        @delete-budget-account="handleDeleteBudgetAccount"
+        @create-budget-transaction="handleCreateBudgetTransaction"
+        @update-budget-transaction="handleUpdateBudgetTransaction"
+        @delete-budget-transaction="handleDeleteBudgetTransaction"
+        @link-budget-transaction-note="handleLinkBudgetTransactionNote"
+        @save-budget-trip="handleSaveBudgetTripPlan"
+        @delete-budget-trip="handleDeleteBudgetTripPlan"
+        @create-bank-profile="handleCreateBankProfile"
+        @update-bank-profile="handleUpdateBankProfile"
+        @delete-bank-profile="handleDeleteBankProfile"
+        @open-budget-planner="handleOpenBudgetPlanner"
+        @close-budget-planner="handleCloseBudgetPlanner"
+        @refresh-budget="handleRefreshBudget"
       />
     </div>
 
@@ -526,6 +869,7 @@ function serializeSyncPayload(payload: {
               :timeline="timeline"
               :editable-tags="true"
               :show-actions="false"
+              :budget-transactions="budgetNoteTransactions?.[activeDesktopNote.id] || []"
               @update-note="handleUpdateActiveNote"
             />
             <div class="flex flex-wrap justify-end gap-2">

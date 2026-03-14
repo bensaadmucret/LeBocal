@@ -3,9 +3,10 @@ import { nextTick, ref, watch, onMounted, onBeforeUnmount, type ComponentPublicI
 import TagPill from '../common/TagPill.vue'
 import EditorCanvas from '../editor/EditorCanvas.vue'
 import { useEditorBridge } from '../../composables/useEditorBridge'
+import type { Block } from '../../stores/useNotesStore'
 
 type ChecklistItem = { id?: string; label: string; done: boolean }
-type BlockItem = { id?: string; type: string; data: Record<string, unknown> }
+type BlockItem = Block
 
 const props = withDefaults(
   defineProps<{
@@ -23,10 +24,21 @@ const props = withDefaults(
     timeline: { time: string; event: string }[]
     editableTags?: boolean
     showActions?: boolean
+    budgetTransactions?: {
+      id: string
+      label: string
+      amount: number
+      type: string
+      date: string
+      accountName?: string
+      categoryName?: string
+      currency?: string
+    }[]
   }>(),
   {
     editableTags: false,
     showActions: true,
+    budgetTransactions: () => [],
   },
 )
 
@@ -242,6 +254,32 @@ function removeTag(tag: string) {
       <div class="mt-3">
         <EditorCanvas ref="editorCanvas" v-model="localBlocks" />
       </div>
+    </div>
+
+    <div>
+      <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Transactions liées</p>
+      <ul v-if="props.budgetTransactions?.length" class="mt-2 space-y-2 text-sm text-gray-600">
+        <li v-for="transaction in props.budgetTransactions" :key="transaction.id" class="rounded-2xl border border-white/80 bg-mist/60 px-3 py-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-ink">{{ transaction.label }}</span>
+            <span :class="transaction.type === 'expense' ? 'text-rose-600' : 'text-emerald-600'">
+              {{ transaction.type === 'expense' ? '-' : '+' }}
+              {{
+                new Intl.NumberFormat('fr-FR', {
+                  style: 'currency',
+                  currency: transaction.currency || 'EUR',
+                }).format(transaction.amount)
+              }}
+            </span>
+          </div>
+          <div class="mt-1 flex flex-wrap gap-3 text-xs text-gray-500">
+            <span>{{ new Date(transaction.date).toLocaleDateString() }}</span>
+            <span v-if="transaction.accountName">{{ transaction.accountName }}</span>
+            <span v-if="transaction.categoryName">{{ transaction.categoryName }}</span>
+          </div>
+        </li>
+      </ul>
+      <p v-else class="mt-2 text-xs text-gray-400">Aucune transaction reliée.</p>
     </div>
 
     <div>
