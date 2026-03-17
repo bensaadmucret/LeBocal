@@ -29,6 +29,9 @@ const store = useNotesStore()
 const budgetStore = useBudgetStore()
 const showAllNotes = ref(false)
 const showEditorModal = ref(false)
+const createNoteDialogOpen = ref(false)
+const createNoteTitle = ref('Nouvelle note')
+const createNoteLoading = ref(false)
 const pendingDeleteId = ref<string | null>(null)
 const activeNav = ref('Tableau de bord')
 const lastSyncAt = ref<number | null>(null)
@@ -247,7 +250,7 @@ function executeCommand(commandId: CommandId | null) {
         openBudgetPlanner('vacation')
         return true
       }
-      void handleCreateNote()
+      handleCreateNote()
       return true
     case 'duplicate-note':
       if (!currentNoteId.value) {
@@ -555,10 +558,36 @@ function handleNavSelect(label: string) {
   pushLog('info', `Section ${label} ouverte`)
 }
 
-async function handleCreateNote() {
-  await store.createNote()
-  showAllNotes.value = false
-  openEditorModal()
+function handleCreateNote() {
+  createNoteTitle.value = 'Nouvelle note'
+  createNoteDialogOpen.value = true
+}
+
+async function submitCreateNote() {
+  const title = createNoteTitle.value.trim()
+  if (!title) {
+    showToast('Veuillez saisir un titre', 'error')
+    return
+  }
+  createNoteLoading.value = true
+  try {
+    await store.createNote({ title })
+    showAllNotes.value = false
+    createNoteDialogOpen.value = false
+    openEditorModal()
+    showToast('Note créée', 'success')
+    pushLog('success', `Note créée : ${title}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de créer la note'
+    showToast(message, 'error')
+    pushLog('error', message)
+  } finally {
+    createNoteLoading.value = false
+  }
+}
+
+function cancelCreateNoteDialog() {
+  createNoteDialogOpen.value = false
 }
 
 function handleViewAll() {
@@ -790,7 +819,7 @@ function serializeSyncPayload(payload: {
  </script>
 
 <template>
-  <div class="min-h-screen bg-[#f2efff] text-ink">
+  <div class="min-h-screen text-[var(--text-main)] transition-colors duration-300">
     <div class="mx-auto max-w-[1200px] py-10 px-6">
       <DesktopWorkspace
         :nav-items="desktopNav"
@@ -857,7 +886,7 @@ function serializeSyncPayload(payload: {
         <div class="relative w-full max-w-4xl rounded-[32px] bg-white/95 p-6 shadow-2xl" style="max-height: 90vh; overflow-y: auto;">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="font-display text-2xl text-ink">Édition de la note</h2>
+              <h2 class="font-display text-2xl text-[var(--text-main)]">Édition de la note</h2>
               <p class="text-sm text-gray-500">Toutes les modifications sont synchronisées automatiquement.</p>
             </div>
             <button class="text-sm text-gray-500" @click="closeEditorModal">Fermer ✕</button>
@@ -905,12 +934,37 @@ function serializeSyncPayload(payload: {
     </transition>
 
     <transition name="fade">
+      <div v-if="createNoteDialogOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4">
+        <div class="w-full max-w-md rounded-3xl bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-6 text-center shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 font-bold">Nouvelle note</p>
+          <h3 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">Choisir un titre</h3>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Un titre clair aide à retrouver la note plus tard.</p>
+          <form class="mt-4 space-y-3" @submit.prevent="submitCreateNote">
+            <input
+              v-model="createNoteTitle"
+              type="text"
+              class="w-full rounded-2xl border border-gray-200 px-4 py-2 text-gray-700 focus:border-royal focus:outline-none"
+              placeholder="Ex. Retro produit"
+              autocomplete="off"
+            />
+            <div class="flex justify-end gap-2">
+              <button type="button" class="rounded-full px-4 py-2 text-sm text-gray-500" @click="cancelCreateNoteDialog">Annuler</button>
+              <button type="submit" class="rounded-full bg-royal px-4 py-2 text-sm font-medium text-white" :disabled="createNoteLoading">
+                {{ createNoteLoading ? 'Création…' : 'Créer' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="fade">
       <div
         v-if="pendingDeleteId"
         class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4"
       >
-        <div class="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
-          <h3 class="font-display text-2xl text-ink">Supprimer la note ?</h3>
+        <div class="w-full max-w-md rounded-3xl bg-[var(--surface-card)] p-6 text-center shadow-2xl">
+          <h3 class="font-display text-2xl text-[var(--text-main)]">Supprimer la note ?</h3>
           <p class="mt-3 text-sm text-gray-600">Cette action est définitive. La note sera retirée de votre base.</p>
           <div class="mt-6 flex justify-end gap-3">
             <button class="rounded-2xl border border-white/70 px-4 py-2 text-sm text-gray-600" @click="cancelPendingDelete">Annuler</button>
@@ -925,9 +979,9 @@ function serializeSyncPayload(payload: {
         v-if="showAllNotes"
         class="fixed inset-0 z-40 flex items-start justify-center bg-black/40 px-4 py-10"
       >
-        <div class="relative w-full max-w-3xl rounded-[32px] bg-white p-6 shadow-2xl">
+        <div class="relative w-full max-w-3xl rounded-[32px] bg-[var(--surface-card)] p-6 shadow-xl ring-1 ring-black/5 dark:ring-white/10">
           <div class="flex items-center justify-between">
-            <h2 class="font-display text-2xl text-ink">Toutes les notes</h2>
+            <h2 class="font-display text-2xl text-[var(--text-main)]">Toutes les notes</h2>
             <button class="text-sm text-gray-500" @click="showAllNotes = false">Fermer ✕</button>
           </div>
           <div class="mt-6 max-h-[70vh] space-y-3 overflow-y-auto pr-2">

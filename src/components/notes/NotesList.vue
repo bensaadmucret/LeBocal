@@ -11,19 +11,19 @@ const emit = defineEmits(['select'])
   <article
     v-for="note in props.notes"
     :key="note.title"
-    class="rounded-3xl border border-white/80 bg-white/80 p-4 shadow-card transition hover:-translate-y-0.5 hover:shadow-lg"
+    class="glass-card tap-effect rounded-3xl p-4 animate-fade-in"
     :class="note.id === props.activeId ? 'ring-2 ring-royal' : ''"
     role="button"
     tabindex="0"
     @click="emit('select', note.id)"
     @keydown.enter="emit('select', note.id)"
   >
-    <div class="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-gray-400">
+    <div class="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-gray-400 dark:text-slate-500 font-bold">
       <span>{{ note.category }}</span>
       <span>{{ note.status }}</span>
     </div>
-    <h5 class="mt-2 font-display text-lg text-ink">{{ note.title }}</h5>
-    <p class="text-sm text-gray-500">{{ note.excerpt }}</p>
-    <p class="mt-2 text-xs text-gray-400">Mis à jour {{ note.updated }}</p>
+    <h5 class="mt-2 font-display text-lg text-ink dark:text-lavender">{{ note.title }}</h5>
+    <p class="text-sm text-gray-500 dark:text-slate-400">{{ note.excerpt }}</p>
+    <p class="mt-2 text-xs text-gray-400 dark:text-slate-600">Mis à jour {{ note.updated }}</p>
   </article>
 </template>

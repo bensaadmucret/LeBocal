@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Le Bocal · Mobile Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#6c5ce7',
+            brandLight: '#f3f0ff',
+            brandDark: '#5b4bc4',
+            surface: '#f8f9fe',
+            cardbg: '#ffffff',
+            textMain: '#2d3436',
+            textMuted: '#b2bec3',
+            success: '#00d09c',
+            warning: '#ffb020',
+            danger: '#ff7675'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif']
+          },
+          boxShadow: {
+            'card': '0 10px 25px rgba(108, 92, 231, 0.08)',
+            'nav': '0 -10px 40px rgba(0, 0, 0, 0.06)',
+            'fab': '0 8px 30px rgba(108, 92, 231, 0.4)'
+          },
+          keyframes: {
+            pushIn: {
+              '0%': { transform: 'translateX(100%)' },
+              '100%': { transform: 'translateX(0)' }
+            },
+            pushOut: {
+              '0%': { transform: 'translateX(0)', opacity: '1' },
+              '100%': { transform: 'translateX(-30%)', opacity: '0.6' }
+            },
+            popIn: {
+              '0%': { transform: 'translateX(-30%)', opacity: '0.6' },
+              '100%': { transform: 'translateX(0)', opacity: '1' }
+            },
+            popOut: {
+              '0%': { transform: 'translateX(0)' },
+              '100%': { transform: 'translateX(100%)' }
+            },
+            springUp: {
+              '0%': { transform: 'translateY(40px)', opacity: '0' },
+              '60%': { transform: 'translateY(-5px)', opacity: '1' },
+              '100%': { transform: 'translateY(0)', opacity: '1' }
+            },
+            haptic: {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(0.96)' }
+            }
+          },
+          animation: {
+            'push-in': 'pushIn 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
+            'push-out': 'pushOut 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
+            'pop-in': 'popIn 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
+            'pop-out': 'popOut 0.4s cubic-bezier(0.32, 0.72, 0, 1)',
+            'spring-up': 'springUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            'haptic': 'haptic 0.15s ease-in-out'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000;
+    }
+    
+    .mobile-container {
+      max-width: 414px;
+      margin: 0 auto;
+      height: 100%;
+      position: relative;
+      background: #f8f9fe;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: #f8f9fe;
+      display: none;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .screen.active {
+      display: block;
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    .screen-content {
+      padding: 1.5rem;
+      padding-bottom: 200px;
+    }
+    
+    .gradient-card {
+      background: linear-gradient(135deg, #8c7af9 0%, #6c5ce7 100%);
+    }
+
+    .bank-card {
+      background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
+      color: white;
+      border-radius: 28px;
+    }
+
+    .folder-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .folder-card:active {
+      transform: scale(0.95);
+      background-color: #f1f0ff;
+    }
+
+    .folder-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 40%;
+      height: 35%;
+      background: #f3f0ff;
+      border-bottom-left-radius: 20px;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 382px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-radius: 32px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    }
+
+    .fab {
+      position: relative;
+      top: -30px;
+      width: 64px;
+      height: 64px;
+      background: #6c5ce7;
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-decoration: none;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .fab:active {
+      transform: scale(0.85) rotate(90deg);
+      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .nav-item {
+      color: #b2bec3;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 18px;
+    }
+    .nav-item.active {
+      color: #6c5ce7;
+      background: #f3f0ff;
+      transform: translateY(-2px);
+    }
+
+    .animate-push-in { animation: pushIn 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+    .animate-push-out { animation: pushOut 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+    .animate-pop-in { animation: popIn 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+    .animate-pop-out { animation: popOut 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+
+    .screen::-webkit-scrollbar { display: none; }
+    .screen { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Financial UI Elements */
+    .balance-text {
+      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .transaction-item {
+      transition: all 0.2s;
+    }
+    .transaction-item:active {
+      background-color: #f1f1f1;
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body class="text-textMain font-sans">
+  <div class="mobile-container">
+    
+    <!-- HOME SCREEN -->
+    <div id="screen-home" class="screen active" data-nav="home">
+      <div class="screen-content">
+        <header class="flex justify-between items-center mb-8 pt-4">
+          <div>
+            <p class="text-brand text-sm font-semibold mb-1">Welcome, John !</p>
+            <h1 class="text-2xl font-display font-bold tracking-tight">Le Bocal</h1>
+          </div>
+          <div class="flex items-center gap-3">
+            <button class="relative p-2 text-textMuted hover:text-textMain transition-colors active:scale-90 duration-150">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+            </button>
+            <img src="https://i.pravatar.cc/100?img=11" alt="Profile" class="w-10 h-10 rounded-full border-2 border-white shadow-sm cursor-pointer active:scale-90 transition-transform duration-150" onclick="navigate('settings')">
+          </div>
+        </header>
+
+        <section class="gradient-card rounded-[32px] p-6 mb-8 text-white shadow-card relative overflow-hidden animate-spring-up">
+          <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full border-4 border-white/10"></div>
+          <div class="absolute -right-12 -bottom-12 w-40 h-40 rounded-full border-4 border-white/10"></div>
+          
+          <div class="flex items-center gap-5 relative z-10">
+            <div class="w-15 h-15 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/30">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3V12H21Z" fill="#FFB020"/>
+                <path d="M21 10H14V3C17.866 3 21 6.13401 21 10Z" fill="#00D09C"/>
+                <path d="M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold mb-0.5">Available Space</h2>
+              <p class="text-white/80 text-sm font-medium">20.254 GB used of 25 GB</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="grid grid-cols-2 gap-4">
+          <div class="folder-card bg-cardbg p-6 shadow-card animate-spring-up" style="animation-delay: 0.1s" onclick="openCategory('Personal')">
+            <div class="folder-icon-wrapper mb-4 text-brand">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <h3 class="font-bold text-lg mb-0.5">Personal</h3>
+            <p class="text-sm font-semibold text-textMuted">30 items</p>
+          </div>
+
+          <div class="folder-card bg-cardbg p-6 shadow-card animate-spring-up" style="animation-delay: 0.15s" onclick="openCategory('Academic')">
+            <div class="folder-icon-wrapper mb-4 text-blue-500 bg-blue-50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+            </div>
+            <h3 class="font-bold text-lg mb-0.5">Academic</h3>
+            <p class="text-sm font-semibold text-textMuted">102 items</p>
+          </div>
+        </section>
+
+        <section class="mt-10">
+          <h3 class="text-xl font-bold mb-5">Quick Access</h3>
+          <div class="grid grid-cols-1 gap-4">
+             <div class="bg-white p-5 rounded-[24px] shadow-sm flex items-center justify-between animate-spring-up" style="animation-delay: 0.2s" onclick="navigate('wallet')">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-base">Bank Account</h4>
+                  <p class="text-xs font-medium text-textMuted">Check balance & cards</p>
+                </div>
+              </div>
+              <svg class="text-textMuted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- WALLET SCREEN -->
+    <div id="screen-wallet" class="screen" data-nav="wallet">
+      <div class="screen-content">
+        <header class="flex items-center gap-4 mb-8 pt-4">
+          <button onclick="navigate('home', 'back')" class="p-3 bg-white rounded-2xl shadow-sm text-brand active:scale-90 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <h1 class="text-2xl font-display font-bold">My Wallet</h1>
+        </header>
+
+        <!-- Credit Card -->
+        <div class="bank-card p-8 mb-10 shadow-2xl relative overflow-hidden animate-spring-up">
+           <div class="absolute right-[-20px] top-[-20px] w-40 h-40 bg-white/5 rounded-full"></div>
+           <div class="flex justify-between items-start mb-12">
+             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+             <span class="text-white/40 font-mono tracking-widest uppercase text-xs">Le Bocal Bank</span>
+           </div>
+           <p class="text-sm text-white/60 mb-1">Current Balance</p>
+           <h2 class="text-4xl font-display font-bold mb-8 balance-text">$12,450.80</h2>
+           <div class="flex justify-between items-end">
+             <div class="font-mono text-sm tracking-widest text-white/80">**** **** **** 8854</div>
+             <div class="text-xs text-white/40">09 / 28</div>
+           </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-4 gap-4 mb-10 animate-spring-up" style="animation-delay: 0.1s">
+          <div class="flex flex-col items-center gap-2">
+            <button class="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-brand active:scale-90 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+            </button>
+            <span class="text-[11px] font-bold text-textMuted uppercase">Send</span>
+          </div>
+           <div class="flex flex-col items-center gap-2">
+            <button class="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-emerald-500 active:scale-90 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 12-7 7-7-7"/><path d="M12 5v14"/></svg>
+            </button>
+            <span class="text-[11px] font-bold text-textMuted uppercase">Recv</span>
+          </div>
+           <div class="flex flex-col items-center gap-2">
+            <button class="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-amber-500 active:scale-90 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+            </button>
+            <span class="text-[11px] font-bold text-textMuted uppercase">Bill</span>
+          </div>
+           <div class="flex flex-col items-center gap-2">
+            <button class="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-rose-500 active:scale-90 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+            </button>
+            <span class="text-[11px] font-bold text-textMuted uppercase">More</span>
+          </div>
+        </div>
+
+        <!-- Transactions -->
+        <h3 class="text-lg font-bold mb-6">Recent Transactions</h3>
+        <div class="space-y-4 animate-spring-up" style="animation-delay: 0.2s">
+          <div class="bg-white p-4 rounded-3xl flex items-center justify-between transaction-item">
+             <div class="flex items-center gap-4">
+                <div class="w-11 h-11 bg-brandLight rounded-2xl flex items-center justify-center text-brand">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-sm">Apple Store</h4>
+                  <p class="text-[11px] font-medium text-textMuted">Yesterday, 14:30</p>
+                </div>
+             </div>
+             <span class="font-bold text-danger">-$199.00</span>
+          </div>
+          <div class="bg-white p-4 rounded-3xl flex items-center justify-between transaction-item">
+             <div class="flex items-center gap-4">
+                <div class="w-11 h-11 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><rect width="14" height="10" x="5" y="7" rx="2"/></svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-sm">Salary Payment</h4>
+                  <p class="text-[11px] font-medium text-textMuted">Sept 15, 09:00</p>
+                </div>
+             </div>
+             <span class="font-bold text-success">+$4,200.00</span>
+          </div>
+          <div class="bg-white p-4 rounded-3xl flex items-center justify-between transaction-item">
+             <div class="flex items-center gap-4">
+                <div class="w-11 h-11 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-sm">Airbnb Rent</h4>
+                  <p class="text-[11px] font-medium text-textMuted">Sept 12, 11:45</p>
+                </div>
+             </div>
+             <span class="font-bold text-danger">-$850.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIST SCREEN -->
+    <div id="screen-list" class="screen" data-nav="list">
+       <div class="screen-content">
+        <header class="flex items-center gap-4 mb-8 pt-4">
+          <button onclick="navigate('home', 'back')" class="p-3 bg-white rounded-2xl shadow-sm text-brand active:scale-90 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <h1 id="list-title" class="text-2xl font-display font-bold">All Notes</h1>
+        </header>
+
+        <div class="relative mb-8">
+          <input type="text" placeholder="Find notes..." class="w-full bg-white border-2 border-transparent rounded-[24px] py-4.5 pl-14 pr-4 shadow-sm focus:border-brand focus:ring-0 outline-none transition-all placeholder:text-textMuted font-medium">
+          <svg class="absolute left-5 top-1/2 -translate-y-1/2 text-textMuted" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </div>
+
+        <div id="notes-container" class="space-y-4"></div>
+      </div>
+    </div>
+
+    <!-- EDITOR SCREEN -->
+    <div id="screen-editor" class="screen bg-white" data-nav="none">
+      <div class="screen-content !pb-8">
+        <header class="flex justify-between items-center mb-10 pt-4">
+          <button onclick="navigate('home', 'back')" class="p-2 text-textMuted active:scale-90 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+          <div class="flex gap-4">
+            <button class="p-2 text-textMuted active:scale-90 transition-transform"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
+            <button id="btn-save-note" onclick="saveNote()" class="px-6 py-2.5 bg-brand text-white rounded-2xl font-bold text-sm shadow-fab active:scale-95 transition-all">Save</button>
+          </div>
+        </header>
+
+        <input id="note-title" type="text" placeholder="Title" class="w-full text-4xl font-display font-bold border-none outline-none mb-4">
+        <div class="flex gap-3 mb-10">
+          <span id="note-category-tag" class="category-tag bg-brandLight text-brand">#Work</span>
+          <span class="category-tag bg-gray-100 text-gray-500">Draft</span>
+        </div>
+        <textarea id="note-content" placeholder="Type something brilliant..." class="w-full h-[60vh] border-none outline-none resize-none text-xl leading-relaxed text-textMain"></textarea>
+      </div>
+      
+      <div id="editor-toolbar" class="fixed bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[366px] bg-white/80 backdrop-blur-xl shadow-2xl rounded-[28px] flex justify-around p-3.5 border border-gray-100 z-[101] translate-y-[200px] transition-transform duration-500">
+        <button class="p-3 text-gray-400 hover:text-brand"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h12"/><path d="M12 6v12"/></svg></button>
+        <button class="p-3 text-brand"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12H3"/><path d="m9 6-6 6 6 6"/><path d="m15 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+
+    <!-- SETTINGS SCREEN -->
+    <div id="screen-settings" class="screen" data-nav="settings">
+      <div class="screen-content">
+        <header class="mb-4 pt-4 flex items-center gap-4">
+          <button onclick="navigate('home', 'back')" class="p-2 text-textMuted">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <h1 class="text-2xl font-display font-bold">Settings</h1>
+        </header>
+
+        <div class="flex flex-col items-center mb-10 animate-spring-up">
+           <img src="https://i.pravatar.cc/120?img=11" alt="Profile" class="w-28 h-28 rounded-full border-4 border-white shadow-xl mb-6">
+           <h2 class="text-2xl font-bold mb-1">John Doe</h2>
+           <p class="text-textMuted font-medium">john.doe@example.com</p>
+        </div>
+
+        <div class="bg-white rounded-[32px] overflow-hidden shadow-sm mb-10 animate-spring-up" style="animation-delay: 0.2s">
+          <div class="p-5 flex items-center justify-between border-b border-gray-50">
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <span class="font-bold">Account</span>
+            </div>
+            <svg class="text-textMuted opacity-50" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+          <button class="w-full p-5 text-left flex items-center justify-between" onclick="navigate('wallet')">
+             <div class="flex items-center gap-4">
+              <div class="w-11 h-11 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
+              <span class="font-bold">Banking Methods</span>
+            </div>
+            <svg class="text-textMuted opacity-50" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <button class="w-full bg-rose-50 text-rose-500 font-extrabold py-5 rounded-[28px]">Log Out</button>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <div class="flex gap-2">
+        <button id="nav-btn-home" onclick="navigate('home')" class="nav-item active">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </button>
+        <button id="nav-btn-list" onclick="navigate('list')" class="nav-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+
+      <button onclick="navigate('editor')" class="fab shadow-fab">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
+      <div class="flex gap-2">
+        <button id="nav-btn-wallet" onclick="navigate('wallet')" class="nav-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </button>
+        <button id="nav-btn-settings" onclick="navigate('settings')" class="nav-item">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <script>
+    const notesData = {
+      'Personal': [
+        { id: 1, title: 'Summer Travel Ideas', meta: '2 days ago', excerpt: 'Check out hotels in Lisbon and Porto.' },
+        { id: 2, title: 'Workout Routine', meta: '5 days ago', excerpt: 'Upper body focus: Bench press, Rows...' }
+      ],
+      'Academic': [
+        { id: 4, title: 'History Essay Draft', meta: '3 days ago', excerpt: 'The Renaissance began in Italy during the 14th century...' }
+      ]
+    };
+
+    let currentActiveScreenId = 'home';
+
+    function navigate(targetScreenId, direction = 'next') {
+      if (targetScreenId === currentActiveScreenId) return;
+
+      const currentScreen = document.getElementById(`screen-${currentActiveScreenId}`);
+      const targetScreen = document.getElementById(`screen-${targetScreenId}`);
+
+      currentScreen.className = 'screen active';
+      targetScreen.className = 'screen active';
+
+      if (direction === 'next') {
+        currentScreen.classList.add('animate-push-out');
+        targetScreen.classList.add('animate-push-in');
+      } else {
+        currentScreen.classList.add('animate-pop-out');
+        targetScreen.classList.add('animate-pop-in');
+      }
+
+      setTimeout(() => {
+        currentScreen.classList.remove('active', 'animate-push-out', 'animate-pop-out');
+        targetScreen.classList.remove('animate-push-in', 'animate-pop-in');
+        currentActiveScreenId = targetScreenId;
+      }, 400);
+
+      updateBottomNav(targetScreenId);
+    }
+
+    function updateBottomNav(screenId) {
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => item.classList.remove('active'));
+      
+      const activeBtn = document.getElementById(`nav-btn-${screenId}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const nav = document.querySelector('.bottom-nav');
+      const toolbar = document.getElementById('editor-toolbar');
+
+      if (screenId === 'editor') {
+        nav.style.transform = 'translateX(-50%) translateY(200px)';
+        setTimeout(() => toolbar.style.transform = 'translateX(-50%) translateY(0)', 100);
+      } else {
+        nav.style.transform = 'translateX(-50%) translateY(0)';
+        toolbar.style.transform = 'translateX(-50%) translateY(200px)';
+      }
+    }
+
+    function openCategory(catName) {
+      const container = document.getElementById('notes-container');
+      const title = document.getElementById('list-title');
+      title.innerText = catName;
+      container.innerHTML = '';
+      const notes = notesData[catName] || [];
+      
+      notes.forEach((note, index) => {
+        const div = document.createElement('div');
+        div.className = `bg-white p-6 rounded-[24px] shadow-sm note-card animate-spring-up cursor-pointer`;
+        div.style.animationDelay = `${index * 0.05}s`;
+        div.onclick = () => openNote(note, catName);
+        div.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <h4 class="font-bold text-lg">${note.title}</h4>
+            <span class="category-tag bg-brandLight text-brand">${catName}</span>
+          </div>
+          <p class="text-sm font-medium text-textMuted line-clamp-2 leading-relaxed">${note.excerpt}</p>
+        `;
+        container.appendChild(div);
+      });
+      navigate('list', 'next');
+    }
+
+    function openNote(note, category = 'General') {
+      document.getElementById('note-title').value = note.title;
+      document.getElementById('note-content').value = note.excerpt;
+      document.getElementById('note-category-tag').innerText = `#${category}`;
+      navigate('editor', 'next');
+    }
+
+    function saveNote() {
+      const btn = document.getElementById('btn-save-note');
+      btn.innerText = 'Saved';
+      btn.style.backgroundColor = '#00d09c';
+      btn.classList.add('animate-haptic');
+      setTimeout(() => {
+        btn.innerText = 'Save';
+        btn.style.backgroundColor = '';
+        btn.classList.remove('animate-haptic');
+        navigate('home', 'back');
+      }, 800);
+    }
+  </script>
+</body>
+</html>

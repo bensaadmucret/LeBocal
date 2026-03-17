@@ -317,7 +317,8 @@ function getMockData(): AppData {
 }
 
 function ensureMockDefaults(data: Partial<AppData>): AppData {
-  const notes = Array.isArray(data.notes) && data.notes.length ? data.notes : [createDefaultNote()]
+  const hasNotesArray = Array.isArray(data.notes)
+  const notes = hasNotesArray ? (data.notes as Note[]) : [createDefaultNote()]
   const activeId = data.activeNoteId ?? notes[0]?.id ?? null
   const collections = Array.isArray(data.collections) && data.collections.length ? data.collections : defaultCollections()
   const templates = Array.isArray(data.templates) && data.templates.length ? data.templates : defaultTemplates()

@@ -9,11 +9,14 @@ const props = defineProps<{
     <article
       v-for="stat in props.stats"
       :key="stat.title"
-      class="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-card"
+      class="glass-card tap-effect animate-fade-in group rounded-3xl p-5"
     >
-      <p class="text-sm text-gray-500">{{ stat.title }}</p>
-      <p class="mt-2 font-display text-4xl text-ink">{{ stat.value }}</p>
-      <p class="text-sm text-royal">{{ stat.detail }}</p>
+      <p class="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] group-hover:text-royal dark:group-hover:text-lavender transition-colors">{{ stat.title }}</p>
+      <p class="mt-2 font-display text-4xl text-[var(--text-main)]">{{ stat.value }}</p>
+      <div class="mt-3 flex items-center justify-between text-xs font-medium text-royal dark:text-lavender">
+        <span>{{ stat.detail }}</span>
+        <span class="opacity-0 group-hover:opacity-100 transition-opacity">↗</span>
+      </div>
     </article>
   </div>
 </template>

@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Le Bocal · Desktop Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Urbanist', 'Space Grotesk', 'sans-serif'],
+            body: ['Urbanist', 'Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --app-bg: linear-gradient(180deg, #edf1f9 0%, #eef2fc 100%);
+      --surface-card: rgba(255, 255, 255, 0.95);
+      --text-main: #000000;
+      --text-muted: #7b7f92;
+      --glass-bg: rgba(255, 255, 255, 0.92);
+      --glass-border: rgba(200, 206, 225, 0.8);
+      --card-shadow: rgba(17, 24, 39, 0.08);
+      --accent-yellow: #edfd93;
+      --accent-cyan: #93d6d6;
+      --accent-mint: #cbe1d6;
+      --accent-lilac: #c8cee1;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--app-bg);
+      color: var(--text-main);
+      font-family: 'Urbanist', 'Inter', sans-serif;
+      padding: 64px 72px 96px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 15% 0%, rgba(255, 255, 255, 0.9), transparent 45%),
+        radial-gradient(circle at 80% 0%, rgba(200, 206, 225, 0.55), transparent 50%);
+      z-index: -1;
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 32px;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.08);
+    }
+
+    .tap-effect {
+      transition: transform 0.1s ease;
+    }
+
+    .tap-effect:active {
+      transform: scale(0.96);
+    }
+
+    .top-nav-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.2rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(200, 206, 225, 0.7);
+      box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(22px);
+    }
+
+    .top-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    .nav-brand {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(15, 23, 42, 0.45);
+      padding-left: 0.4rem;
+    }
+
+    .top-nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .top-nav-link {
+      border-radius: 999px;
+      padding: 0.55rem 1.2rem;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: rgba(15, 23, 42, 0.7);
+      white-space: nowrap;
+      background: transparent;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.2s ease;
+    }
+
+    .top-nav-link.active {
+      background: #000000;
+      color: #ffffff;
+      border-color: #000000;
+      box-shadow: inset 0 -4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .top-nav-link.active .nav-link-icon {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+    }
+
+    .nav-link-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.06);
+      border: 1px solid rgba(15, 23, 42, 0.05);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .top-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .settings-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(200, 206, 225, 0.8);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0.45rem 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      color: rgba(15, 23, 42, 0.8);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .top-nav-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      border: 1px solid rgba(200, 206, 225, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    }
+
+    .profile-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      object-fit: cover;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+    }
+
+    .pill-button {
+      border-radius: 999px;
+      border: 1px solid rgba(200, 206, 225, 0.8);
+      padding: 0.55rem 1.1rem;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 999px;
+      border: 1px solid rgba(200, 206, 225, 0.8);
+      padding: 0.55rem 1.1rem;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-card {
+      background: linear-gradient(120deg, #fdfefe, #f2f6ff);
+      border-radius: 40px;
+      box-shadow: 0 40px 80px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      color: var(--text-main);
+    }
+
+    .chip-pill {
+      border-radius: 999px;
+      background: var(--accent-yellow);
+      padding: 0.35rem 0.9rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      color: #2f2f2f;
+    }
+
+    .promo-card {
+      background: #f4f6ff;
+      border-radius: 40px;
+      border: 1px solid rgba(15, 23, 42, 0.04);
+      box-shadow: 0 40px 80px rgba(15, 23, 42, 0.08);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .promo-image {
+      border-radius: 32px;
+      background: radial-gradient(circle at 40% 0%, rgba(237, 253, 147, 0.6), transparent 50%),
+        linear-gradient(160deg, #111, #4a4f8f);
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 600;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .kpi-card {
+      background: #fff;
+      border-radius: 36px;
+      border: 1px solid rgba(15, 23, 42, 0.05);
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.08);
+      padding: 1.75rem;
+    }
+
+    .kpi-card header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .kpi-pill {
+      border-radius: 999px;
+      background: rgba(200, 206, 225, 0.5);
+      padding: 0.2rem 0.8rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+    }
+
+    .activity-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .activity-bars span {
+      width: 26px;
+      border-radius: 16px 16px 8px 8px;
+      background: rgba(148, 163, 184, 0.3);
+      display: inline-block;
+    }
+
+    .activity-bars span.active {
+      background: linear-gradient(180deg, #edfd93, #dfee72);
+      box-shadow: 0 10px 20px rgba(229, 232, 115, 0.5);
+    }
+
+    .visa-card {
+      border-radius: 36px;
+      background: linear-gradient(160deg, #cbe1d6, #93d6d6);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.05);
+    }
+
+    .visa-chip {
+      width: 60px;
+      height: 36px;
+      border-radius: 12px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #2d3245;
+    }
+
+    .line-chart {
+      margin-top: 1.5rem;
+      height: 130px;
+      border-radius: 30px;
+      background: linear-gradient(180deg, rgba(237, 253, 147, 0.6), rgba(255, 255, 255, 0.9));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .line-chart::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('data:image/svg+xml,%3Csvg width="240" height="120" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 90 C60 60 120 110 180 70 C210 55 240 60 240 60" fill="none" stroke="%23ffb347" stroke-width="6" stroke-linecap="round"/%3E%3C/svg%3E') center/cover no-repeat;
+      opacity: 0.9;
+    }
+
+    .contract-chart {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: conic-gradient(#93d6d6 0 62%, #c8cee1 62% 90%, rgba(148, 163, 184, 0.35) 90% 100%);
+      position: relative;
+      margin: 0 auto;
+    }
+
+    .contract-chart::after {
+      content: '86%';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      margin: 18px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1c1f2a;
+    }
+
+    .mini-filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .mini-filter-bar button {
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 0.8rem;
+    }
+
+    .collection-card {
+      border-radius: 32px;
+      border: 1px solid rgba(200, 206, 225, 0.6);
+      background: #fff;
+      box-shadow: 0 24px 50px rgba(15, 23, 42, 0.05);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .collection-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(72, 77, 120, 0.15);
+    }
+
+    .note-card,
+    .planner-card,
+    .active-card {
+      border-radius: 32px;
+      background: #fff;
+      box-shadow: 0 30px 60px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.04);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 15, 40, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      z-index: 120;
+    }
+
+    .modal-card {
+      background: #fff;
+      border-radius: 28px;
+      width: 100%;
+      max-width: 520px;
+      padding: 32px;
+      box-shadow: 0 40px 120px rgba(20, 15, 60, 0.35);
+    }
+
+    .modal-card input,
+    .modal-card textarea {
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid rgba(100, 116, 139, 0.25);
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Sidebar Pill Design */
+    .sidebar-shell {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 56px;
+      padding: 32px 18px;
+      box-shadow: 0 35px 80px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      min-height: calc(100vh - 120px);
+      position: sticky;
+      top: 32px;
+    }
+
+    .sidebar-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .nav-circle-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: #7b8195;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(200, 206, 225, 0.8);
+      box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .nav-circle-btn:hover {
+      background: #fff;
+      transform: translateY(-2px);
+    }
+
+    .nav-circle-btn.active {
+      background: #000;
+      color: white;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+      border-color: #000;
+    }
+
+    .theme-switcher-pill {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(15, 23, 42, 0.05);
+    }
+
+    .theme-circle-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(200, 206, 225, 0.8);
+    }
+
+    html:not(.dark) #theme-light { display: none; }
+    html.dark #theme-dark { display: none; }
+
+  </style>
+</head>
+
+<body>
+  <div class="max-w-6xl mx-auto space-y-8">
+    <div class="top-nav-pill flex-wrap -mt-8">
+      <div class="top-nav-left">
+        <div class="top-nav-menu">
+          <a href="desktop_sidebar.html" class="top-nav-link active">
+
+            Dashboard
+          </a>
+          <a href="#" class="top-nav-link">People</a>
+          <a href="#" class="top-nav-link">Hiring</a>
+          <a href="#" class="top-nav-link">Devices</a>
+          <a href="#" class="top-nav-link">Apps</a>
+          <a href="#" class="top-nav-link">Salary</a>
+          <a href="#" class="top-nav-link">Calendar</a>
+          <a href="#" class="top-nav-link">Reviews</a>
+        </div>
+      </div>
+      <div class="top-nav-actions">
+        <button class="settings-pill">
+          <span class="nav-link-icon">⚙️</span>
+          Setting
+        </button>
+        <button class="top-nav-icon" title="Notifications">
+          <span style="font-size: 1rem">🔔</span>
+        </button>
+        <button class="top-nav-icon" title="Utilisateur">
+          <span style="font-size: 0.95rem">👤</span>
+        </button>
+      </div>
+    </div>
+
+    <main class="space-y-6 px-6 pb-10">
+        <header class="flex flex-wrap items-center gap-4 justify-between">
+          <div>
+            <p class="text-xs uppercase tracking-[0.4em] text-[var(--text-muted)]">Accueil</p>
+            <h1 class="text-4xl font-semibold">Bienvenue, Léna</h1>
+          </div>
+        </header>
+
+        <nav class="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+          <span>Accueil</span>
+          <span>·</span>
+          <span>Dashboard</span>
+        </nav>
+
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-pill">🔍 Search</span>
+            <span class="toolbar-pill">🧭 Filters</span>
+            <span class="toolbar-pill">📅 20-27 Jan, 2025</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="toolbar-pill">➕ Add Widget</button>
+            <button class="toolbar-pill">Create a report</button>
+          </div>
+        </div>
+
+        <section class="grid gap-6 xl:grid-cols-[1.45fr,1fr,1fr]">
+          <article class="promo-card">
+            <div class="promo-image">✨</div>
+            <div class="rounded-3xl bg-white/90 p-6 flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <p class="text-lg font-semibold">Pro Version</p>
+                <span class="chip-pill">15 Days</span>
+              </div>
+              <p class="text-sm text-[var(--text-muted)]">Vos earnings avec la version pro restent stables cette semaine.</p>
+              <button class="flex items-center gap-2 rounded-full bg-black text-white px-5 py-2 w-max">
+                Learn more
+                <span>➜</span>
+              </button>
+            </div>
+          </article>
+
+          <article class="kpi-card">
+            <header>
+              <span>Activity</span>
+              <span class="kpi-pill">Weekly</span>
+            </header>
+            <p class="text-4xl font-semibold mt-4">186h</p>
+            <p class="text-sm text-[var(--text-muted)]">Worked this week</p>
+            <div class="activity-bars">
+              <span style="height: 38px"></span>
+              <span style="height: 52px"></span>
+              <span style="height: 64px"></span>
+              <span class="active" style="height: 98px"></span>
+              <span style="height: 46px"></span>
+              <span style="height: 32px"></span>
+              <span style="height: 28px"></span>
+            </div>
+            <div class="flex justify-between text-xs uppercase tracking-[0.3em] text-[var(--text-muted)] mt-3">
+              <span>Lun</span>
+              <span>Mar</span>
+              <span>Mer</span>
+              <span>Jeu</span>
+              <span>Ven</span>
+              <span>Sam</span>
+              <span>Dim</span>
+            </div>
+          </article>
+
+          <article class="visa-card">
+            <div class="flex items-center justify-between">
+              <p class="text-sm uppercase tracking-[0.2em] text-[var(--text-muted)]">Virtual card</p>
+              <span class="visa-chip">VISA</span>
+            </div>
+            <p class="text-5xl font-semibold">$390.00</p>
+            <p class="text-sm text-[var(--text-muted)]">•••• 6802 · 09/28</p>
+            <div class="mini-filter-bar mt-4">
+              <button>Dollar 72%</button>
+              <button>Tether 28%</button>
+            </div>
+            <button class="self-start mt-5 rounded-full border border-white/60 px-4 py-1.5 text-sm">Voir détails</button>
+          </article>
+        </section>
+
+        <section class="grid gap-6 lg:grid-cols-[1.35fr,1.2fr,0.9fr]">
+          <article class="glass-card p-6 flex flex-col gap-4">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm font-semibold">Advantages</p>
+                <p class="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">Pro earnings</p>
+              </div>
+              <span class="chip-pill">+15J</span>
+            </div>
+            <p class="text-sm text-[var(--text-muted)]">Join the elite of crypto world avec Pro Version.</p>
+            <button class="rounded-full bg-black text-white px-5 py-2 w-max">Learn more</button>
+          </article>
+
+          <article class="kpi-card">
+            <header>
+              <span>Total spent</span>
+              <span class="kpi-pill">This week</span>
+            </header>
+            <p class="text-4xl font-semibold mt-4">$820.65</p>
+            <small class="text-[var(--text-muted)]">+ $605.00 vs semaine dernière</small>
+            <div class="line-chart mt-6"></div>
+            <div class="flex justify-between text-xs uppercase tracking-[0.3em] text-[var(--text-muted)] mt-4">
+              <span>Lun</span>
+              <span>Mar</span>
+              <span>Mer</span>
+              <span>Jeu</span>
+              <span>Ven</span>
+              <span>Sam</span>
+              <span>Dim</span>
+            </div>
+          </article>
+
+          <article class="kpi-card text-center flex flex-col gap-4">
+            <header class="justify-center">
+              <span>Contract type</span>
+            </header>
+            <div class="contract-chart"></div>
+            <div class="grid grid-cols-2 gap-3 text-sm text-[var(--text-muted)] mt-2">
+              <div>
+                <p class="font-semibold text-lg text-[var(--text-main)]">140</p>
+                <p>Milestone</p>
+              </div>
+              <div>
+                <p class="font-semibold text-lg text-[var(--text-main)]">48</p>
+                <p>Bonus</p>
+              </div>
+              <div>
+                <p class="font-semibold text-lg text-[var(--text-main)]">16</p>
+                <p>Hourly</p>
+              </div>
+              <div>
+                <p class="font-semibold text-lg text-[var(--text-main)]">10</p>
+                <p>Other</p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid gap-6 lg:grid-cols-[1.4fr,1fr]">
+          <div class="space-y-6">
+            <div class="glass-card p-6">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">Notes rapides</h2>
+                <button class="text-sm text-indigo-500 font-semibold">Tout voir</button>
+              </div>
+              <div class="note-meta flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold mt-3">
+                <span>GÉNÉRAL</span>
+                <span>EN COURS</span>
+              </div>
+              <div id="quick-note-card" class="glass-card mt-4 p-5 ring-2 ring-royal"></div>
+            </div>
+
+            <div class="glass-card p-6">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">Activity log</h2>
+                <button class="text-sm text-indigo-500 font-semibold">Voir tout</button>
+              </div>
+              <ul id="quick-panel-list" class="text-sm text-[var(--text-muted)] space-y-3 mt-4"></ul>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="active-card p-6" id="active-note">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">Note active</p>
+                  <h3 class="text-2xl font-semibold mt-2" data-note-title>Nouvelle note</h3>
+                  <p class="text-sm text-[var(--text-muted)]" data-note-summary>Note test pour la banque</p>
+                </div>
+                <button id="desktop-edit-btn" class="edit-btn bg-indigo-600 text-white px-6 py-2.5 rounded-2xl shadow-indigo-600/30">Éditer</button>
+              </div>
+            </div>
+
+            <div class="planner-card p-6">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">Planner</p>
+                  <h3 class="text-2xl font-semibold mt-2">Aucun voyage</h3>
+                </div>
+                <button class="border border-slate-200 text-sm px-5 py-1.5 rounded-full">Ouvrir</button>
+              </div>
+              <p class="text-sm text-[var(--text-muted)] mt-3">Prochainement · Budget 0 € · Banque N/A</p>
+            </div>
+          </div>
+        </section>
+      </main>
+  </div>
+</body>
+
+<!-- Edit Modal -->
+<div id="desktop-edit-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal-card space-y-4">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-[0.3em] text-[var(--text-muted)]">Éditer la note</p>
+        <h3 class="text-2xl font-semibold mt-1">Note active</h3>
+      </div>
+      <button id="desktop-edit-close" class="tap-effect text-slate-400">✕</button>
+    </div>
+    <form id="desktop-edit-form" class="space-y-4">
+      <label class="block text-sm font-medium text-[var(--text-main)]">
+        Titre
+        <input id="desktop-edit-title" required />
+      </label>
+      <label class="block text-sm font-medium text-[var(--text-main)]">
+        Résumé
+        <textarea id="desktop-edit-summary" rows="2" required></textarea>
+      </label>
+      <label class="block text-sm font-medium text-[var(--text-main)]">
+        Détails
+        <textarea id="desktop-edit-detail" rows="4" required></textarea>
+      </label>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" id="desktop-edit-cancel" class="tap-effect rounded-full border border-slate-200 px-5 py-2 text-sm">Annuler</button>
+        <button type="submit" class="tap-effect rounded-2xl bg-indigo-600 text-white px-6 py-2.5 shadow-lg">Sauvegarder</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const DASHBOARD_DATA = {
+    quickPanel: [
+      { label: 'Notes en revue', value: 2 },
+      { label: 'Blocs en cours', value: 1 },
+      { label: 'Sync', value: 'il y a 3 min' }
+    ],
+    collections: [
+      { label: 'Salaire', count: '3200 items', meta: 'Auto-mis à jour', icon: '💼', class: 'bg-emerald-50/80 text-emerald-900 border border-emerald-100 shadow-sm' },
+      { label: 'Hébergement', count: '450 items', meta: 'Auto-mis à jour', icon: '🏨', class: 'bg-slate-50 text-slate-900 border border-slate-200' },
+      { label: 'Transport', count: '180 items', meta: 'Auto-mis à jour', icon: '✈️', class: 'bg-amber-50/80 text-amber-900 border border-amber-200', double: true }
+    ],
+    quickNote: {
+      tag: 'GÉNÉRAL',
+      status: 'EN COURS',
+      title: 'Nouvelle note',
+      summary: 'Note test pour la banque',
+      updated: 'Mis à jour il y a 8 h'
+    },
+    activeNote: {
+      title: 'Nouvelle note',
+      summary: 'Note test pour la banque',
+      detail: 'Assurer la cohérence desktop, préparer raccourcis et vérifier la synchro mobile.'
+    }
+  };
+
+  function renderQuickPanel() {
+    const list = document.getElementById('quick-panel-list');
+    if (!list) return;
+    list.innerHTML = DASHBOARD_DATA.quickPanel.map(item => `<li class="flex justify-between"><span>${item.label}</span><span>${item.value}</span></li>`).join('');
+  }
+
+  function renderCollections() {
+    const grid = document.getElementById('collections-grid');
+    if (!grid) return;
+    grid.innerHTML = DASHBOARD_DATA.collections.map(col => `
+      <article class="collection-card ${col.class} p-5 ${col.double ? 'col-span-1 sm:col-span-2' : ''} transition-all hover:shadow-md">
+        <div>
+          <p class="text-[10px] uppercase tracking-[0.35em] opacity-70 font-bold">${col.label}</p>
+          <strong class="text-2xl block mt-1">${col.count}</strong>
+          <small class="block opacity-60 mt-1 font-medium">${col.meta}</small>
+        </div>
+        <span class="text-3xl filter saturate-[1.2]">${col.icon}</span>
+      </article>
+    `).join('');
+  }
+
+  function renderQuickNote() {
+    const card = document.getElementById('quick-note-card');
+    if (!card) return;
+    const note = DASHBOARD_DATA.quickNote;
+    card.innerHTML = `
+      <small class="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)]">${note.tag}</small>
+      <div class="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold mt-1">
+        <span>${note.tag}</span>
+        <span>${note.status}</span>
+      </div>
+      <h4 class="text-2xl font-semibold mt-3">${note.title}</h4>
+      <p class="text-sm text-[var(--text-muted)]">${note.summary}</p>
+      <p class="text-xs text-[var(--text-muted)] mt-3">${note.updated}</p>
+    `;
+  }
+
+  function renderActiveNote() {
+    const note = DASHBOARD_DATA.activeNote;
+    const titleEl = document.querySelector('#active-note [data-note-title]');
+    const summaryEl = document.querySelector('#active-note [data-note-summary]');
+    if (titleEl) titleEl.textContent = note.title;
+    if (summaryEl) summaryEl.textContent = note.summary;
+  }
+
+  function bindThemeToggle() {
+    const lightBtn = document.getElementById('theme-light');
+    const darkBtn = document.getElementById('theme-dark');
+
+    function setTheme(isDark) {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    if (lightBtn) lightBtn.addEventListener('click', () => setTheme(false));
+    if (darkBtn) darkBtn.addEventListener('click', () => setTheme(true));
+  }
+
+  function bindEditModal() {
+    const openBtn = document.getElementById('desktop-edit-btn');
+    const modal = document.getElementById('desktop-edit-modal');
+    const closeBtn = document.getElementById('desktop-edit-close');
+    const cancelBtn = document.getElementById('desktop-edit-cancel');
+    const form = document.getElementById('desktop-edit-form');
+    const titleInput = document.getElementById('desktop-edit-title');
+    const summaryInput = document.getElementById('desktop-edit-summary');
+    const detailInput = document.getElementById('desktop-edit-detail');
+
+    function openModal() {
+      const note = DASHBOARD_DATA.activeNote;
+      titleInput.value = note.title;
+      summaryInput.value = note.summary;
+      detailInput.value = note.detail ?? '';
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+    }
+
+    openBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+    cancelBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (event) => {
+      if (event.target === modal) closeModal();
+    });
+
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      DASHBOARD_DATA.activeNote.title = titleInput.value.trim();
+      DASHBOARD_DATA.activeNote.summary = summaryInput.value.trim();
+      DASHBOARD_DATA.activeNote.detail = detailInput.value.trim();
+      DASHBOARD_DATA.quickNote.title = titleInput.value.trim();
+      DASHBOARD_DATA.quickNote.summary = summaryInput.value.trim();
+      renderActiveNote();
+      renderQuickNote();
+      closeModal();
+    });
+  }
+
+  function initDashboardMock() {
+    renderQuickPanel();
+    renderCollections();
+    renderQuickNote();
+    renderActiveNote();
+    bindThemeToggle();
+    bindEditModal();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDashboardMock);
+  } else {
+    initDashboardMock();
+  }
+</script>
+
+</html>
