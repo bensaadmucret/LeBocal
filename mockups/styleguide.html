@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Le Bocal · Charte Graphique</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            royal: '#5b3ef1',
+            ink: '#2d224b'
+          },
+          fontFamily: {
+            display: ['Space Grotesk', 'Inter', 'sans-serif'],
+            body: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --royal: #5b3ef1;
+      --ink: #2d224b;
+      --text-muted: #64748b;
+      --accent-neon: #D7FE03;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #f7f2ff 0%, #f1f5ff 55%, #e9f6ff 100%);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      padding: 80px 40px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 24% 0%, rgba(150, 118, 255, 0.45), transparent 48%),
+        radial-gradient(circle at 76% 4%, rgba(106, 68, 235, 0.35), transparent 55%);
+      z-index: -1;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 32px;
+      box-shadow: 0 20px 60px rgba(78, 68, 180, 0.1);
+      backdrop-filter: blur(12px);
+    }
+
+    .color-swatch {
+      height: 120px;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px;
+      font-weight: 600;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-circle-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      color: #64748b;
+      background: white;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-circle-btn.active {
+      background: var(--royal);
+      color: white;
+      box-shadow: 0 10px 25px rgba(91, 62, 241, 0.3);
+      border-color: var(--royal);
+    }
+
+    .gradient-swatch {
+      border-radius: 24px;
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px;
+      color: #0f172a;
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="max-w-5xl mx-auto space-y-16">
+    <!-- Header -->
+    <header class="text-center">
+      <p class="text-xs uppercase tracking-[0.4em] text-indigo-500 font-bold mb-3">Design System · Premium V1</p>
+      <h1 class="text-7xl font-semibold font-display tracking-tighter">Charte Graphique</h1>
+      <p class="text-slate-500 mt-6 text-xl max-w-2xl mx-auto">Une élégance intemporelle basée sur le Royal Blue et la clarté spatiale.</p>
+    </header>
+
+    <!-- Colors -->
+    <section class="space-y-8">
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-bold tracking-tight">Palette de Couleurs</h2>
+        <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <div class="space-y-3 p-2 group">
+          <div class="color-swatch bg-[#5b3ef1] text-white">#5B3EF1</div>
+          <p class="text-sm font-bold">Royal Blue</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Couleur primaire pour l'identité.</p>
+        </div>
+        <div class="space-y-3 p-2 group">
+          <div class="color-swatch bg-[#D7FE03] text-black">#D7FE03</div>
+          <p class="text-sm font-bold">Neon</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Accent haute visibilité pour les CTA critiques.</p>
+        </div>
+        <div class="space-y-3 p-2 group">
+          <div class="color-swatch bg-[#2d224b] text-white">#2D224B</div>
+          <p class="text-sm font-bold">Ink</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Texte et titres.</p>
+        </div>
+        <div class="space-y-3 p-2 group">
+          <div class="color-swatch bg-white text-slate-400 border border-slate-100">#FFFFFF</div>
+          <p class="text-sm font-bold">White Glass</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Surfaces et cartes.</p>
+        </div>
+        <div class="space-y-3 p-2 group">
+          <div class="color-swatch bg-[#f2efff] text-slate-400">#F2EFFF</div>
+          <p class="text-sm font-bold">App Bg</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Fonds doux.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dégradés widgets -->
+    <section class="space-y-8">
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-bold tracking-tight">Dégradés Widgets</h2>
+        <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-3 p-2">
+          <div class="gradient-swatch" style="background: linear-gradient(135deg, rgba(237,253,147,0.8), rgba(255,255,255,0.95));">
+            Solde Total
+          </div>
+          <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold">Limonade douce → White glass</p>
+          <p class="text-[11px] text-slate-500">Utilisé pour les soldes positifs.</p>
+        </div>
+        <div class="space-y-3 p-2">
+          <div class="gradient-swatch" style="background: linear-gradient(135deg, rgba(201,206,226,0.9), rgba(255,255,255,0.95));">
+            Dépenses du mois
+          </div>
+          <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold">Lilac brumeux</p>
+          <p class="text-[11px] text-slate-500">Nuance froide pour les dépenses.</p>
+        </div>
+        <div class="space-y-3 p-2">
+          <div class="gradient-swatch" style="background: linear-gradient(135deg, rgba(147,214,214,0.7), rgba(237,253,147,0.75));">
+            Budget vacances
+          </div>
+          <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold">Cyan → Citron</p>
+          <p class="text-[11px] text-slate-500">Accent voyages/budgets.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Collection Accents -->
+    <section class="space-y-8">
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-bold tracking-tight">Accents de Collections (Haute Lisibilité)</h2>
+        <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6 border-emerald-100 bg-emerald-50/80">
+          <div class="flex justify-between items-start">
+            <p class="text-[10px] uppercase tracking-widest text-emerald-900 font-bold">Emerald</p>
+            <span class="text-xl">💼</span>
+          </div>
+          <p class="text-emerald-950 font-bold mt-2">Haute Lisibilité</p>
+          <p class="text-emerald-800/80 text-xs mt-1">Utilisé pour les actifs positifs.</p>
+        </div>
+        <div class="glass-card p-6 border-slate-200 bg-slate-50">
+          <div class="flex justify-between items-start">
+            <p class="text-[10px] uppercase tracking-widest text-slate-900 font-bold">Slate</p>
+            <span class="text-xl">🏨</span>
+          </div>
+          <p class="text-slate-950 font-bold mt-2">Neutre Elegant</p>
+          <p class="text-slate-800/80 text-xs mt-1">Utilisé pour les catégories stabiles.</p>
+        </div>
+        <div class="glass-card p-6 border-amber-200 bg-amber-50/80">
+          <div class="flex justify-between items-start">
+            <p class="text-[10px] uppercase tracking-widest text-amber-900 font-bold">Amber</p>
+            <span class="text-xl">✈️</span>
+          </div>
+          <p class="text-amber-950 font-bold mt-2">Attention Douce</p>
+          <p class="text-amber-800/80 text-xs mt-1">Utilisé pour les dépenses mobiles.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography -->
+    <section class="space-y-8">
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-bold tracking-tight">Typographie</h2>
+        <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+      </div>
+      <div class="glass-card p-12 grid md:grid-cols-2 gap-16">
+        <div class="space-y-6">
+          <p class="text-[10px] uppercase tracking-[0.3em] text-indigo-500 font-bold">Display Font</p>
+          <h3 class="font-display text-6xl leading-[0.9]">Space Grotesk</h3>
+          <p class="text-slate-500 leading-relaxed text-sm">Moderne et distinctive pour un caractère fort.</p>
+          <div class="flex gap-4">
+            <span class="text-4xl font-medium">Aa</span>
+            <span class="text-4xl font-bold">Aa</span>
+          </div>
+        </div>
+        <div class="space-y-6">
+          <p class="text-[10px] uppercase tracking-[0.3em] text-indigo-500 font-bold">Body Font</p>
+          <h3 class="font-body text-6xl leading-[0.9]">Inter</h3>
+          <p class="text-slate-500 leading-relaxed text-sm">Clarté absolue pour une interface fonctionnelle.</p>
+          <div class="flex gap-4">
+            <span class="text-4xl font-normal">Aa</span>
+            <span class="text-4xl font-medium">Aa</span>
+            <span class="text-4xl font-bold">Aa</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Components -->
+    <section class="space-y-8">
+      <div class="flex items-center gap-4">
+        <h2 class="text-2xl font-bold tracking-tight">Composants Signature</h2>
+        <div class="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-10">
+        <!-- Buttons -->
+        <div class="glass-card p-10 space-y-8">
+          <h4 class="font-bold text-lg">Boutons Primaires</h4>
+          <div class="flex flex-wrap gap-4">
+            <button class="bg-[#5b3ef1] text-white font-semibold rounded-2xl px-8 py-3.5 shadow-xl hover:scale-105 transition-transform">Action Royal Blue</button>
+            <button class="bg-white border border-slate-200 text-slate-600 rounded-full px-8 py-3.5 shadow-sm">Bouton Secondaire</button>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="glass-card p-10 space-y-8">
+          <h4 class="font-bold text-lg">Système de Navigation</h4>
+          <div class="flex gap-6 items-center">
+             <div class="flex flex-col gap-3 bg-slate-50 p-4 rounded-full">
+                <button class="nav-circle-btn active">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </button>
+                <button class="nav-circle-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </button>
+             </div>
+             <p class="text-sm text-slate-500 leading-relaxed">Navigation épurée en mode "Pill" avec focus coloré.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer link -->
+    <footer class="text-center pt-8 border-t border-slate-200">
+      <div class="flex justify-center gap-6">
+        <a href="desktop.html" class="text-indigo-600 font-semibold hover:underline">← Dashboard</a>
+        <a href="notes.html" class="text-indigo-600 font-semibold hover:underline">Notes →</a>
+      </div>
+    </footer>
+  </div>
+</body>
+
+</html>
