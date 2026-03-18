@@ -59,7 +59,7 @@ describe('buildPaletteSections & evaluateEntry', () => {
         durationDays: 4,
         notes: 'Team building',
         estimatedTotal: 2500,
-        updatedAt: Date.now() - 1_000_000,
+        updatedAt: new Date(Date.now() - 1_000_000).toISOString(),
       },
     },
   ]
@@ -127,7 +127,12 @@ describe('Cache helpers', () => {
   it('persiste et recharge le cache palette', () => {
     savePaletteCacheToStorage(STORAGE_KEY, payload)
     const loaded = loadPaletteCacheFromStorage(STORAGE_KEY)
-    expect(loaded?.entries[0]?.payload.title).toBe('Note cache')
+    const firstEntry = loaded?.entries[0]
+    if (firstEntry?.type === 'note') {
+      expect(firstEntry.payload.title).toBe('Note cache')
+    } else {
+      throw new Error('Expected note entry in cache payload test')
+    }
     expect(loaded?.lastSyncAt).toBe(payload.lastSyncAt)
   })
 
