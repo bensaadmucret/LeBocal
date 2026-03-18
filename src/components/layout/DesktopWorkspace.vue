@@ -90,11 +90,11 @@ const emit = defineEmits([
   'open-budget-planner',
   'close-budget-planner',
   'refresh-budget',
+  'open-command-palette',
 ])
 
 
 const sidebarOpen = ref(false)
-const searchQuery = ref('')
 const selectedCollectionId = ref<string | null>(null)
 const plannerExpanded = ref(false)
 const { isDark, toggleTheme } = useTheme()
@@ -107,13 +107,7 @@ const filteredNotes = computed(() => {
       notes = notes.filter(n => n.category.toLowerCase() === coll.name.toLowerCase())
     }
   }
-  if (!searchQuery.value) return notes
-  const q = searchQuery.value.toLowerCase()
-  return notes.filter(note => 
-    note.title.toLowerCase().includes(q) || 
-    note.excerpt.toLowerCase().includes(q) ||
-    note.category.toLowerCase().includes(q)
-  )
+  return notes
 })
 
 const mode = computed(() => props.mode ?? 'workspace')
@@ -216,15 +210,20 @@ function forwardClosePlanner() {
           <h1 class="font-display text-2xl lg:text-3xl font-semibold text-[var(--text-main)]">Workspace Hub</h1>
         </div>
         <div class="flex items-center gap-3 lg:gap-4">
-          <div class="flex-1 md:flex-none md:w-64 lg:w-80 rounded-full bg-[var(--surface-card)] dark:bg-[var(--glass-bg)] px-5 lg:px-6 py-2.5 lg:py-3 shadow-inner ring-1 ring-black/5 dark:ring-white/5 flex items-center gap-3">
-            <span class="text-slate-400">🔍</span>
-            <input
-              v-model="searchQuery"
-              type="search"
-              placeholder="Rechercher..."
-              class="w-full bg-transparent text-sm focus:outline-none dark:text-white"
-            />
-          </div>
+          <button
+            type="button"
+            class="flex-1 md:flex-none md:w-64 lg:w-80 rounded-full bg-[var(--surface-card)] dark:bg-[var(--glass-bg)] px-5 lg:px-6 py-2.5 lg:py-3 shadow-inner ring-1 ring-black/5 dark:ring-white/5 flex items-center justify-between gap-3 text-left transition hover:ring-2 hover:ring-royal/30"
+            @click="emit('open-command-palette')"
+          >
+            <span class="flex items-center gap-3 text-[var(--text-muted)]">
+              <span class="text-slate-400">🔍</span>
+              <span class="text-sm font-medium text-[var(--text-main)] dark:text-white">Rechercher partout</span>
+            </span>
+            <span class="hidden md:flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
+              <span class="rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:border-white/10 dark:text-slate-200">⌘</span>
+              <span class="rounded-md border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:border-white/10 dark:text-slate-200">K</span>
+            </span>
+          </button>
           <button 
             class="h-10 w-10 lg:h-12 lg:w-12 rounded-xl lg:rounded-2xl bg-[var(--surface-card)] dark:bg-[var(--glass-bg)] shadow-lg flex items-center justify-center text-lg lg:text-xl tap-effect ring-1 ring-black/5 dark:ring-white/10 transition-all hover:scale-110"
             :title="isDark ? 'Passer au mode jour' : 'Passer au mode nuit'"

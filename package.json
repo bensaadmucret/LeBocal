@@ -13,7 +13,8 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "lint": "vue-tsc --noEmit"
+    "lint": "vue-tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@editorjs/checklist": "^1.6.0",
@@ -22,15 +23,20 @@
     "@editorjs/header": "^2.8.8",
     "@editorjs/list": "^2.0.9",
     "@tauri-apps/api": "^2.10.1",
+    "@tiptap/extension-placeholder": "^3.20.4",
+    "@tiptap/starter-kit": "^3.20.4",
+    "@tiptap/vue-3": "^3.20.4",
     "vue": "^3.5.30"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.10.1",
     "@vitejs/plugin-vue": "^6.0.5",
+    "@vue/test-utils": "^2.4.5",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "tailwindcss": "^3.4.15",
     "vite": "^8.0.0",
+    "vitest": "^4.1.0",
     "vue-tsc": "^3.2.5"
   }
 }

@@ -2,13 +2,14 @@
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import DesktopWorkspace from './components/layout/DesktopWorkspace.vue'
 import { useNotesStore } from './stores/useNotesStore'
-import type { Task, NoteUpdatePayload, Block } from './stores/useNotesStore'
+import type { Task, NoteUpdatePayload, Block, Note } from './stores/useNotesStore'
 import { useBudgetStore } from './stores/useBudgetStore'
 import type {
   BudgetAccountInput,
   BudgetTransactionInput,
   BudgetTransaction,
   BudgetTripPlanInput,
+  BudgetTripPlan,
   BudgetBankProfileInput,
 } from './stores/useBudgetStore'
 import NotesList from './components/notes/NotesList.vue'
@@ -17,6 +18,23 @@ import ActiveNotePanel from './components/notes/ActiveNotePanel.vue'
 import { useCommandShortcuts } from './composables/useCommandShortcuts'
 import type { CommandId } from './composables/useCommandShortcuts'
 import { useEditorBridge, type EditorActions } from './composables/useEditorBridge'
+import CommandPalette from './components/common/CommandPalette.vue'
+import type { CommandPaletteSection } from './types/commandPalette'
+import {
+  buildPaletteSections,
+  isCacheFresh,
+  loadPaletteCacheFromStorage,
+  paletteEntryId,
+  savePaletteCacheToStorage,
+  signatureForEntries,
+  truncatePaletteEntries,
+  clearPaletteCacheStorage,
+  type BudgetTransactionDisplay,
+  type CommandPaletteCatalogEntry,
+  type PaletteNoteSnapshot,
+  type PaletteTransactionSnapshot,
+  type PaletteTripSnapshot,
+} from './features/commandPalette/paletteEngine'
 
 const baseNav = [
   { label: 'Tableau de bord', icon: '🏠' },
@@ -24,6 +42,16 @@ const baseNav = [
   { label: 'Budget', icon: '💶' },
   { label: 'Paramètres', icon: '⚙️' },
 ]
+
+const PALETTE_SECTION_LIMITS = {
+  notes: 18,
+  transactions: 18,
+  trips: 10,
+}
+
+const PALETTE_CACHE_KEY = 'le-bocal:command-palette-cache:v1'
+const PALETTE_CACHE_MAX_ENTRIES = 150
+const PALETTE_CACHE_TTL_MS = 1000 * 60 * 60 * 24 // 24h
 
 const store = useNotesStore()
 const budgetStore = useBudgetStore()
@@ -39,6 +67,14 @@ const { toasts, logs, showToast, dismissToast, pushLog } = useFeedback()
 const initialSyncCompleted = ref(false)
 const { matchEventToCommand, getShortcut, formatShortcutLabel } = useCommandShortcuts()
 const { editorEntry } = useEditorBridge()
+const commandPaletteOpen = ref(false)
+const commandPaletteQuery = ref('')
+const commandPaletteOffline = ref(false)
+const canUseWindow = typeof window !== 'undefined'
+const updateOfflineIndicator = () => {
+  if (typeof navigator === 'undefined') return
+  commandPaletteOffline.value = !navigator.onLine
+}
 type PlannerMode = 'vacation' | 'bank'
 
 const toastVariants: Record<string, string> = {
@@ -291,14 +327,21 @@ onMounted(async () => {
   } finally {
     initialSyncCompleted.value = true
   }
-  if (typeof window !== 'undefined') {
+  if (canUseWindow) {
     window.addEventListener('keydown', handleGlobalKeydown, true)
+    window.addEventListener('keydown', handlePaletteShortcut, true)
+    window.addEventListener('online', updateOfflineIndicator)
+    window.addEventListener('offline', updateOfflineIndicator)
+    updateOfflineIndicator()
   }
 })
 
 onBeforeUnmount(() => {
-  if (typeof window !== 'undefined') {
+  if (canUseWindow) {
     window.removeEventListener('keydown', handleGlobalKeydown, true)
+    window.removeEventListener('keydown', handlePaletteShortcut, true)
+    window.removeEventListener('online', updateOfflineIndicator)
+    window.removeEventListener('offline', updateOfflineIndicator)
   }
 })
 
@@ -422,6 +465,157 @@ const budgetNoteTransactions = computed(() => {
 
 const budgetLoading = computed(() => budgetStore.loading.value)
 
+const paletteCache = ref<CommandPaletteCatalogEntry[]>([])
+const paletteCacheMeta = ref<{ savedAt: number | null; lastSyncAt: number | null }>({
+  savedAt: null,
+  lastSyncAt: null,
+})
+let lastSavedPaletteSignature: string | null = null
+if (typeof window !== 'undefined') {
+  const payload = loadPaletteCacheFromStorage(PALETTE_CACHE_KEY)
+  if (payload && isCacheFresh(payload.savedAt, PALETTE_CACHE_TTL_MS)) {
+    paletteCache.value = payload.entries
+    paletteCacheMeta.value = { savedAt: payload.savedAt, lastSyncAt: payload.lastSyncAt ?? null }
+    lastSavedPaletteSignature = signatureForEntries(paletteCache.value)
+  } else if (payload) {
+    clearPaletteCacheStorage(PALETTE_CACHE_KEY)
+  }
+}
+
+const livePaletteCatalog = computed<CommandPaletteCatalogEntry[]>(() => {
+  const entries: CommandPaletteCatalogEntry[] = []
+  for (const note of store.notes.value) {
+    const snapshot: PaletteNoteSnapshot = {
+      id: note.id,
+      title: note.title || 'Sans titre',
+      summary: note.summary || '',
+      status: note.status || 'Brouillon',
+      tags: Array.isArray(note.tags) ? note.tags : [],
+      updatedAt: note.updatedAt,
+    }
+    entries.push({ type: 'note', payload: snapshot })
+  }
+  for (const transaction of budgetTransactionsDisplay.value.slice(0, 80)) {
+    const snapshot: PaletteTransactionSnapshot = {
+      id: transaction.id,
+      label: transaction.label,
+      accountName: transaction.accountName,
+      categoryName: transaction.categoryName,
+      amount: transaction.amount,
+      memo: transaction.memo,
+      date: transaction.date,
+      type: transaction.type,
+      accountCurrency: transaction.accountCurrency,
+    }
+    entries.push({ type: 'transaction', payload: snapshot })
+  }
+  for (const trip of budgetTripPlans.value) {
+    const snapshot: PaletteTripSnapshot = {
+      id: trip.id,
+      title: trip.title,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      durationDays: trip.durationDays,
+      notes: trip.notes,
+      estimatedTotal: trip.estimatedTotal,
+      updatedAt: trip.updatedAt,
+    }
+    entries.push({ type: 'trip', payload: snapshot })
+  }
+  return entries
+})
+
+const paletteSource = computed(() => {
+  const hasLiveEntries = livePaletteCatalog.value.length > 0
+  const cacheFresh = isCacheFresh(paletteCacheMeta.value.savedAt, PALETTE_CACHE_TTL_MS)
+  const hasUsableCache = cacheFresh && paletteCache.value.length > 0
+  const shouldUseCache = (!hasLiveEntries && hasUsableCache) || (commandPaletteOffline.value && hasUsableCache)
+  if (shouldUseCache) {
+    return { entries: paletteCache.value, fromCache: true }
+  }
+  return { entries: livePaletteCatalog.value, fromCache: false }
+})
+
+const commandPaletteCatalog = computed<CommandPaletteCatalogEntry[]>(() => paletteSource.value.entries)
+const commandPaletteUsesCache = computed(() => paletteSource.value.fromCache)
+const paletteCacheLastSyncLabel = computed(() => {
+  if (!commandPaletteUsesCache.value) return null
+  const ts = paletteCacheMeta.value.lastSyncAt ?? paletteCacheMeta.value.savedAt
+  if (!ts) return null
+  return new Date(ts).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })
+})
+
+const commandPaletteSections = computed<CommandPaletteSection[]>(() =>
+  buildPaletteSections(commandPaletteCatalog.value, commandPaletteQuery.value, PALETTE_SECTION_LIMITS),
+)
+
+const commandPaletteEntryMap = computed(() => {
+  const map = new Map<string, CommandPaletteCatalogEntry>()
+  for (const entry of commandPaletteCatalog.value) {
+    map.set(paletteEntryId(entry), entry)
+  }
+  return map
+})
+
+function handleCommandPaletteOpen(prefill?: string) {
+  commandPaletteQuery.value = prefill ?? commandPaletteQuery.value
+  updateOfflineIndicator()
+  commandPaletteOpen.value = true
+}
+
+function handleCommandPaletteClose() {
+  commandPaletteOpen.value = false
+}
+
+async function handleCommandPaletteSelect(itemId: string) {
+  const entry = commandPaletteEntryMap.value.get(itemId)
+  if (!entry) {
+    handleCommandPaletteClose()
+    return
+  }
+
+  if (entry.type === 'note') {
+    await store.setActiveNote(entry.payload.id)
+    activeNav.value = 'Notes'
+    pushLog('info', `Note ouverte via palette : ${entry.payload.title || 'Sans titre'}`)
+  } else if (entry.type === 'transaction') {
+    activeNav.value = 'Budget'
+    showToast(`Transaction « ${entry.payload.label} »`, 'info')
+    pushLog('info', `Transaction consultée via palette : ${entry.payload.label}`)
+  } else if (entry.type === 'trip') {
+    activeNav.value = 'Budget'
+    handleOpenBudgetPlanner('vacation')
+    showToast(`Voyage « ${entry.payload.title} »`, 'info')
+    pushLog('info', `Voyage ouvert via palette : ${entry.payload.title}`)
+  }
+
+  handleCommandPaletteClose()
+}
+
+function handlePaletteShortcut(event: KeyboardEvent) {
+  if (!canUseWindow) return
+  const target = event.target as HTMLElement | null
+  if (isEditableTarget(target)) return
+  const key = event.key?.toLowerCase()
+  const wantsToggle = (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && key === 'k'
+  if (!wantsToggle) return
+  event.preventDefault()
+  if (commandPaletteOpen.value) {
+    handleCommandPaletteClose()
+  } else {
+    commandPaletteQuery.value = ''
+    handleCommandPaletteOpen()
+  }
+}
+
+function isEditableTarget(target: HTMLElement | null) {
+  if (!target) return false
+  const editableTags = ['INPUT', 'TEXTAREA', 'SELECT']
+  if (editableTags.includes(target.tagName)) return true
+  if (target.isContentEditable) return true
+  return false
+}
+
 function openBudgetPlanner(mode: PlannerMode) {
   budgetPlannerMode.value = mode
   budgetPlannerOpen.value = true
@@ -438,6 +632,25 @@ watch(
       closeBudgetPlanner()
     }
   },
+)
+
+watch(
+  () => ({ entries: livePaletteCatalog.value, offline: commandPaletteOffline.value }),
+  ({ entries, offline }) => {
+    if (!entries.length || offline) return
+    const truncated = truncatePaletteEntries(entries, PALETTE_CACHE_MAX_ENTRIES)
+    const signature = signatureForEntries(truncated)
+    if (signature === lastSavedPaletteSignature) return
+    lastSavedPaletteSignature = signature
+    paletteCache.value = truncated
+    paletteCacheMeta.value = { savedAt: Date.now(), lastSyncAt: lastSyncAt.value }
+    savePaletteCacheToStorage(PALETTE_CACHE_KEY, {
+      entries: truncated,
+      savedAt: paletteCacheMeta.value.savedAt!,
+      lastSyncAt: paletteCacheMeta.value.lastSyncAt,
+    })
+  },
+  { deep: true },
 )
 
 watch(
@@ -866,6 +1079,7 @@ function serializeSyncPayload(payload: {
         @open-budget-planner="handleOpenBudgetPlanner"
         @close-budget-planner="handleCloseBudgetPlanner"
         @refresh-budget="handleRefreshBudget"
+        @open-command-palette="() => handleCommandPaletteOpen()"
       />
     </div>
 
@@ -1008,5 +1222,16 @@ function serializeSyncPayload(payload: {
         <button class="text-xs text-white/80" @click="dismissToast(toast.id)">Fermer</button>
       </div>
     </TransitionGroup>
+
+    <CommandPalette
+      v-model:query="commandPaletteQuery"
+      :open="commandPaletteOpen"
+      :sections="commandPaletteSections"
+      :is-offline="commandPaletteOffline"
+      :uses-cache="commandPaletteUsesCache"
+      :cache-label="paletteCacheLastSyncLabel"
+      @select="handleCommandPaletteSelect"
+      @close="handleCommandPaletteClose"
+    />
   </div>
 </template>
