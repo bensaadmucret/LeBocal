@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
-import EditorJS, { type OutputData } from '@editorjs/editorjs'
+import EditorJS from '@editorjs/editorjs'
 import Header from '@editorjs/header'
 import List from '@editorjs/list'
 import Checklist from '@editorjs/checklist'
 import Code from '@editorjs/code'
+import Image from '@editorjs/image'
 import type { Block } from '../../stores/useNotesStore'
+import { translateToEditorData, translateFromEditorData, serializeBlocks } from '../../utils/editor-mapper'
 
 const props = defineProps<{ modelValue: Block[] }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: Block[]): void }>()
@@ -37,7 +39,7 @@ watch(
     try {
       await editor.isReady
       if (typeof editor.render === 'function') {
-        await editor.render(toEditorData(blocks))
+        await editor.render(translateToEditorData(blocks))
       }
     } catch (err) {
       console.warn('Editor render skipped', err)
@@ -50,12 +52,40 @@ async function initEditor() {
   editor = new EditorJS({
     holder: holderId,
     minHeight: 0,
-    data: toEditorData(props.modelValue),
+    data: translateToEditorData(props.modelValue),
     tools: {
       header: Header,
       list: List,
       checklist: Checklist,
       code: Code,
+      image: {
+        class: Image,
+        config: {
+          uploader: {
+            async uploadByFile(file: File) {
+              // Mock upload: convert to base64 for local preview
+              return new Promise((resolve) => {
+                const reader = new FileReader()
+                reader.onload = (e) => {
+                  resolve({
+                    success: 1,
+                    file: {
+                      url: e.target?.result as string,
+                    },
+                  })
+                }
+                reader.readAsDataURL(file)
+              })
+            },
+            async uploadByUrl(url: string) {
+              return {
+                success: 1,
+                file: { url },
+              }
+            },
+          },
+        },
+      },
     },
     onReady: () => {
       isReady.value = true
@@ -67,42 +97,13 @@ async function initEditor() {
         return
       }
       const data = await editor.save()
-      const blocks = fromEditorData(data)
+      const blocks = translateFromEditorData(data)
       updatingFromEditor = true
       lastSerialized = serializeBlocks(blocks)
       emit('update:modelValue', blocks)
       updatingFromEditor = false
     },
   })
-}
-
-function toEditorData(blocks: Block[] = []): OutputData {
-  return {
-    blocks: blocks.map((block) => ({
-      id: block.id,
-      type: block.type === 'text' ? 'paragraph' : block.type,
-      data: block.data || {},
-    })),
-  }
-}
-
-function fromEditorData(data: OutputData): Block[] {
-  return (data.blocks || []).map((block) => ({
-    id: block.id || cryptoId(),
-    type: block.type === 'paragraph' ? 'text' : block.type,
-    data: block.data || {},
-  }))
-}
-
-function serializeBlocks(blocks: Block[] = []) {
-  return JSON.stringify(blocks)
-}
-
-function cryptoId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return `${Date.now()}-${Math.random()}`
 }
 
 async function insertTextBlock(content = 'Nouveau paragraphe') {
@@ -130,7 +131,7 @@ async function insertCodeBlock() {
 async function saveBlocks(): Promise<Block[]> {
   if (!editor) return []
   const data = await editor.save()
-  return fromEditorData(data)
+  return translateFromEditorData(data)
 }
 
 defineExpose({
@@ -143,7 +144,7 @@ defineExpose({
 </script>
 
 <template>
-  <div :id="holderId" class="editor-canvas rounded-2xl border border-white/70 bg-white/95"></div>
+  <div :id="holderId" class="editor-canvas rounded-[32px] bg-white/40 backdrop-blur-sm shadow-sm"></div>
 </template>
 
 <style scoped>

@@ -2,7 +2,7 @@
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import DesktopWorkspace from './components/layout/DesktopWorkspace.vue'
 import { useNotesStore } from './stores/useNotesStore'
-import type { Task, NoteUpdatePayload, Block, Note } from './stores/useNotesStore'
+import type { Task, NoteUpdatePayload, Block, Note, CollectionInputPayload } from './stores/useNotesStore'
 import { useBudgetStore } from './stores/useBudgetStore'
 import type {
   BudgetAccountInput,
@@ -20,6 +20,8 @@ import type { CommandId } from './composables/useCommandShortcuts'
 import { useEditorBridge, type EditorActions } from './composables/useEditorBridge'
 import CommandPalette from './components/common/CommandPalette.vue'
 import type { CommandPaletteSection } from './types/commandPalette'
+import NoteComposerModal from './components/notes/NoteComposerModal.vue'
+import StyleGuide from './components/common/StyleGuide.vue'
 import {
   buildPaletteSections,
   isCacheFresh,
@@ -57,9 +59,9 @@ const store = useNotesStore()
 const budgetStore = useBudgetStore()
 const showAllNotes = ref(false)
 const showEditorModal = ref(false)
-const createNoteDialogOpen = ref(false)
-const createNoteTitle = ref('Nouvelle note')
-const createNoteLoading = ref(false)
+const noteComposerOpen = ref(false)
+const noteComposerSavingMode = ref<null | 'save' | 'publish'>(null)
+const noteComposerClearTrigger = ref(0)
 const pendingDeleteId = ref<string | null>(null)
 const activeNav = ref('Tableau de bord')
 const lastSyncAt = ref<number | null>(null)
@@ -169,6 +171,17 @@ async function handleLinkBudgetTransactionNote({ transactionId, noteId }: { tran
     showToast(noteId ? 'Transaction associée à la note' : 'Association retirée', 'success')
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Association impossible'
+    showToast(message, 'error')
+    pushLog('error', message)
+  }
+}
+
+async function handleComposerCreateCollection(payload: CollectionInputPayload) {
+  try {
+    await store.createCollection(payload)
+    showToast('Collection créée', 'success')
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de créer la collection'
     showToast(message, 'error')
     pushLog('error', message)
   }
@@ -772,36 +785,38 @@ function handleNavSelect(label: string) {
 }
 
 function handleCreateNote() {
-  createNoteTitle.value = 'Nouvelle note'
-  createNoteDialogOpen.value = true
+  noteComposerOpen.value = true
 }
 
-async function submitCreateNote() {
-  const title = createNoteTitle.value.trim()
-  if (!title) {
+function handleCloseNoteComposer() {
+  noteComposerOpen.value = false
+}
+
+async function handleComposerAction(mode: 'save' | 'publish', payload: NoteUpdatePayload) {
+  if (!payload.title?.trim()) {
     showToast('Veuillez saisir un titre', 'error')
     return
   }
-  createNoteLoading.value = true
+  noteComposerSavingMode.value = mode
   try {
-    await store.createNote({ title })
+    await store.createNote(payload)
+    noteComposerOpen.value = false
+    noteComposerClearTrigger.value += 1
     showAllNotes.value = false
-    createNoteDialogOpen.value = false
-    openEditorModal()
-    showToast('Note créée', 'success')
-    pushLog('success', `Note créée : ${title}`)
+    showToast(mode === 'publish' ? 'Note publiée' : 'Note enregistrée', 'success')
+    pushLog('success', `Note ${mode === 'publish' ? 'publiée' : 'enregistrée'} : ${payload.title}`)
+    await openEditorModal()
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Impossible de créer la note'
     showToast(message, 'error')
     pushLog('error', message)
   } finally {
-    createNoteLoading.value = false
+    noteComposerSavingMode.value = null
   }
 }
 
-function cancelCreateNoteDialog() {
-  createNoteDialogOpen.value = false
-}
+const handleComposerSave = (payload: NoteUpdatePayload) => handleComposerAction('save', payload)
+const handleComposerPublish = (payload: NoteUpdatePayload) => handleComposerAction('publish', payload)
 
 function handleViewAll() {
   showAllNotes.value = true
@@ -1084,10 +1099,10 @@ function serializeSyncPayload(payload: {
     </div>
 
     <transition name="fade">
-      <div v-if="!initialSyncCompleted" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div class="flex items-center gap-3 rounded-2xl bg-white/90 px-6 py-4 text-sm text-gray-600 shadow-2xl">
-          <span class="h-4 w-4 animate-spin rounded-full border-2 border-royal border-t-transparent"></span>
-          Initialisation des notes…
+      <div v-if="!initialSyncCompleted" class="fixed inset-0 z-[60] flex items-center justify-center bg-[#f6eede]/80 backdrop-blur-xl">
+        <div class="flex items-center gap-4 rounded-3xl bg-white p-8 text-base font-medium text-anthracite shadow-2xl border border-black/5">
+          <span class="h-5 w-5 animate-spin rounded-full border-2 border-sage border-t-transparent"></span>
+          Initialisation du Bocal…
         </div>
       </div>
     </transition>
@@ -1097,13 +1112,13 @@ function serializeSyncPayload(payload: {
         v-if="showEditorModal"
         class="fixed inset-0 z-[65] flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-10"
       >
-        <div class="relative w-full max-w-4xl rounded-[32px] bg-white/95 p-6 shadow-2xl" style="max-height: 90vh; overflow-y: auto;">
-          <div class="flex items-center justify-between">
+        <div class="relative w-full max-w-5xl rounded-[48px] bg-[#faf9f6] p-12 shadow-2xl border border-black/5" style="max-height: 92vh; overflow-y: auto;">
+          <div class="flex items-center justify-between mb-8">
             <div>
-              <h2 class="font-display text-2xl text-[var(--text-main)]">Édition de la note</h2>
-              <p class="text-sm text-gray-500">Toutes les modifications sont synchronisées automatiquement.</p>
+              <h2 class="font-display text-3xl text-anthracite tracking-tight">Édition de la note</h2>
+              <p class="text-sm text-clay mt-1">Vos modifications sont sauvegardées instantanément.</p>
             </div>
-            <button class="text-sm text-gray-500" @click="closeEditorModal">Fermer ✕</button>
+            <button class="h-10 w-10 flex items-center justify-center rounded-full bg-black/5 text-anthracite hover:bg-black/10 transition-colors" @click="closeEditorModal">✕</button>
           </div>
           <div class="mt-6 space-y-4">
             <ActiveNotePanel
@@ -1128,7 +1143,7 @@ function serializeSyncPayload(payload: {
               >
                 Supprimer
               </button>
-              <button class="rounded-2xl bg-royal px-5 py-2 text-sm font-medium text-white" @click="handleModalSave">
+              <button class="rounded-2xl bg-sage px-5 py-2 text-sm font-medium text-white" @click="handleModalSave">
                 Sauvegarder
               </button>
             </div>
@@ -1142,47 +1157,38 @@ function serializeSyncPayload(payload: {
         v-if="initialSyncCompleted && isBackgroundSyncing"
         class="fixed right-6 bottom-6 z-[55] flex items-center gap-3 rounded-full bg-white/90 px-4 py-2 text-sm text-gray-600 shadow-xl"
       >
-        <span class="h-3 w-3 animate-spin rounded-full border border-royal border-t-transparent"></span>
+        <span class="h-3 w-3 animate-spin rounded-full border border-sage border-t-transparent"></span>
         Synchronisation des notes…
       </div>
     </transition>
 
-    <transition name="fade">
-      <div v-if="createNoteDialogOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4">
-        <div class="w-full max-w-md rounded-3xl bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-6 text-center shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
-          <p class="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 font-bold">Nouvelle note</p>
-          <h3 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">Choisir un titre</h3>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Un titre clair aide à retrouver la note plus tard.</p>
-          <form class="mt-4 space-y-3" @submit.prevent="submitCreateNote">
-            <input
-              v-model="createNoteTitle"
-              type="text"
-              class="w-full rounded-2xl border border-gray-200 px-4 py-2 text-gray-700 focus:border-royal focus:outline-none"
-              placeholder="Ex. Retro produit"
-              autocomplete="off"
-            />
-            <div class="flex justify-end gap-2">
-              <button type="button" class="rounded-full px-4 py-2 text-sm text-gray-500" @click="cancelCreateNoteDialog">Annuler</button>
-              <button type="submit" class="rounded-full bg-royal px-4 py-2 text-sm font-medium text-white" :disabled="createNoteLoading">
-                {{ createNoteLoading ? 'Création…' : 'Créer' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </transition>
+    <NoteComposerModal
+      :open="noteComposerOpen"
+      :collections="store.collections.value"
+      :saving-mode="noteComposerSavingMode"
+      :clear-trigger="noteComposerClearTrigger"
+      @close="handleCloseNoteComposer"
+      @save="handleComposerSave"
+      @publish="handleComposerPublish"
+      @create-collection="handleComposerCreateCollection"
+    />
+
+    <StyleGuide />
 
     <transition name="fade">
       <div
         v-if="pendingDeleteId"
-        class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md px-4"
       >
-        <div class="w-full max-w-md rounded-3xl bg-[var(--surface-card)] p-6 text-center shadow-2xl">
-          <h3 class="font-display text-2xl text-[var(--text-main)]">Supprimer la note ?</h3>
-          <p class="mt-3 text-sm text-gray-600">Cette action est définitive. La note sera retirée de votre base.</p>
-          <div class="mt-6 flex justify-end gap-3">
-            <button class="rounded-2xl border border-white/70 px-4 py-2 text-sm text-gray-600" @click="cancelPendingDelete">Annuler</button>
-            <button class="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-medium text-white" @click="confirmPendingDelete">Supprimer</button>
+        <div class="w-full max-w-md rounded-[40px] bg-[#faf9f6] p-10 text-center shadow-2xl border border-black/5 scale-100 animate-in fade-in zoom-in duration-300">
+          <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <h3 class="font-display text-3xl text-anthracite tracking-tight">Supprimer la note ?</h3>
+          <p class="mt-4 text-base text-clay leading-relaxed">Cette action est définitive. La note sera retirée de votre base de connaissances.</p>
+          <div class="mt-10 flex flex-col gap-3">
+            <button class="w-full rounded-2xl bg-[#c98e8e] py-4 text-sm font-bold text-white shadow-lg shadow-rose-900/10 hover:brightness-95 transition-all" @click="confirmPendingDelete">Oui, supprimer définitivement</button>
+            <button class="w-full rounded-2xl bg-white border border-black/5 py-4 text-sm font-bold text-anthracite hover:bg-black/5 transition-all" @click="cancelPendingDelete">Annuler</button>
           </div>
         </div>
       </div>

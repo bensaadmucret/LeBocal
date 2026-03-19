@@ -5,14 +5,28 @@
 @tailwind utilities;
 
 :root {
-  --app-bg: #f2efff;
-  --surface: #ffffff;
-  --surface-card: rgba(255, 255, 255, 0.95);
-  --text-main: #2d224b;
-  --text-muted: #64748b;
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --card-shadow: rgba(91, 62, 241, 0.05);
+  --app-bg: #f6eede;
+  --surface: #faf9f6;
+  --surface-card: rgba(255, 255, 255, 0.5);
+  --text-main: #3c4146;
+  --text-muted: #6a737b;
+  --glass-bg: rgba(255, 255, 255, 0.35);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --card-shadow: rgba(78, 67, 51, 0.05);
+  --color-bg-surface: #faf9f6;
+  --color-bg-muted: #fbf9f4;
+  --color-border: rgba(0, 0, 0, 0.05);
+  --color-border-strong: rgba(0, 0, 0, 0.1);
+  --color-text-primary: #3c4146;
+  --color-text-secondary: #6a737b;
+  --color-accent: #95a392;
+  --color-success: #8db596;
+  --color-warning: #c9b0a1;
+  --color-danger: #c98e8e;
+  --color-tag-bg: #e2e8e0;
+  --color-tag-text: #4a5d4e;
+  --radius-card: 32px;
+  --radius-input: 16px;
 }
 
 .dark {
@@ -24,6 +38,18 @@
   --glass-bg: rgba(45, 34, 75, 0.5);
   --glass-border: rgba(255, 255, 255, 0.05);
   --card-shadow: rgba(0, 0, 0, 0.4);
+  --color-bg-surface: #1f1b31;
+  --color-bg-muted: #2b2640;
+  --color-border: #3a3652;
+  --color-border-strong: #4c4763;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #b7bed0;
+  --color-accent: #7c91ff;
+  --color-success: #4dd7a1;
+  --color-warning: #ffce6b;
+  --color-danger: #ff8f97;
+  --color-tag-bg: rgba(124, 145, 255, 0.2);
+  --color-tag-text: #cdd5ff;
 }
 
 html {
@@ -83,10 +109,10 @@ body {
 
 /* Mockup Specifics */
 .hero-card {
-  background: linear-gradient(135deg, #5b21b6, #7c3aed);
+  background: linear-gradient(135deg, #95a392, #6a737b);
   color: white;
   border-radius: 36px;
-  box-shadow: 0 40px 90px rgba(91, 60, 196, 0.5);
+  box-shadow: 0 40px 90px rgba(149, 163, 146, 0.3);
 }
 
 .chips span {

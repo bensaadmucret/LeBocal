@@ -168,7 +168,7 @@ function forwardClosePlanner() {
 
     <!-- Sidebar -->
     <aside 
-      class="glass-card flex w-full lg:w-64 flex-col items-center gap-6 lg:gap-10 rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 animate-fade-in shadow-xl dark:bg-[var(--surface)] transition-all duration-300 overflow-hidden"
+      class="glass-card sticky top-6 lg:top-10 self-start flex w-full lg:w-60 flex-col items-center gap-4 lg:gap-6 rounded-[32px] lg:rounded-[40px] p-5 lg:p-6 animate-fade-in shadow-xl dark:bg-[var(--surface)] transition-all duration-300 overflow-hidden"
       :class="[sidebarOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 lg:max-h-none opacity-0 lg:opacity-100 hidden lg:flex']"
     >
       <div class="text-center">
@@ -180,16 +180,16 @@ function forwardClosePlanner() {
         <button
           v-for="item in props.navItems"
           :key="item.label"
-          class="tap-effect flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium transition-all"
-          :class="item.active ? 'bg-royal text-white shadow-lg scale-105 font-semibold' : 'text-gray-500 dark:text-slate-400 hover:bg-white/70 dark:hover:bg-white/5'"
+          class="tap-effect flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition-all"
+          :class="item.active ? 'bg-sage text-anthracite shadow-md scale-105 font-semibold' : 'text-gray-500 dark:text-slate-400 hover:bg-white/70 dark:hover:bg-white/5'"
           @click="emit('select-nav', item.label)"
         >
           <span>{{ item.icon }}</span>
           <span>{{ item.label }}</span>
         </button>
       </nav>
-      <button class="tap-effect mt-auto flex h-16 w-16 items-center justify-center rounded-[24px] bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-indigo-500/40 transition-shadow" @click="emit('create-note')">
-        <span class="text-2xl">+</span>
+      <button class="tap-effect mt-2 flex h-14 w-14 items-center justify-center rounded-[20px] bg-clay text-mist shadow-xl shadow-clay/20 hover:scale-105 transition-transform" @click="emit('create-note')">
+        <span class="text-2xl font-bold">+</span>
       </button>
 
       <div class="w-full rounded-2xl bg-[var(--surface-card)] dark:bg-[var(--glass-bg)] p-4 text-sm text-[var(--text-main)] shadow-sm ring-1 ring-black/5 dark:ring-white/5">
@@ -212,7 +212,7 @@ function forwardClosePlanner() {
         <div class="flex items-center gap-3 lg:gap-4">
           <button
             type="button"
-            class="flex-1 md:flex-none md:w-64 lg:w-80 rounded-full bg-[var(--surface-card)] dark:bg-[var(--glass-bg)] px-5 lg:px-6 py-2.5 lg:py-3 shadow-inner ring-1 ring-black/5 dark:ring-white/5 flex items-center justify-between gap-3 text-left transition hover:ring-2 hover:ring-royal/30"
+            class="flex-1 md:flex-none md:w-64 lg:w-80 rounded-full bg-[var(--surface-card)] dark:bg-[var(--glass-bg)] px-5 lg:px-6 py-2.5 lg:py-3 shadow-inner ring-1 ring-black/5 dark:ring-white/5 flex items-center justify-between gap-3 text-left transition hover:ring-2 hover:ring-sage/30"
             @click="emit('open-command-palette')"
           >
             <span class="flex items-center gap-3 text-[var(--text-muted)]">
@@ -270,7 +270,7 @@ function forwardClosePlanner() {
                 class="collection-card tap-effect rounded-[24px] lg:rounded-[28px] p-4 lg:p-5 cursor-pointer border border-transparent dark:bg-[var(--glass-bg)]"
                 :class="[
                   collection.color || 'bg-gradient-to-br from-white to-slate-50 dark:from-[var(--surface)] dark:to-[var(--glass-bg)]',
-                  selectedCollectionId === collection.id ? 'ring-2 ring-royal border-royal/20 bg-white dark:bg-[var(--surface)] shadow-lg' : 'shadow-sm hover:shadow-md'
+                  selectedCollectionId === collection.id ? 'ring-2 ring-sage border-sage/20 bg-white dark:bg-[var(--surface)] shadow-lg' : 'shadow-sm hover:shadow-md'
                 ]"
                 @click="toggleCollection(collection.id)"
               >

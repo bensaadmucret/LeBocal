@@ -50,16 +50,26 @@ export interface TemplateInputPayload {
   payload: NoteUpdatePayload
 }
 
+export const NOTE_STATUSES = ['Brouillon', 'En cours', 'Revue', 'Publié'] as const
+export type NoteStatus = (typeof NOTE_STATUSES)[number]
+
+export const NOTE_PRIORITIES = ['Low', 'Medium', 'High'] as const
+export type NotePriority = (typeof NOTE_PRIORITIES)[number]
+
 export interface Note {
   id: string
   title: string
   summary: string
   status: string
+  priority?: NotePriority
   tags: string[]
   updatedAt: number
   tasks: Task[]
   sections: Sections
   blocks: Block[]
+  collectionId?: string | null
+  reminderAt?: number | null
+  linkedEntities?: string[]
 }
 
 export interface AppData {
@@ -73,10 +83,14 @@ export interface NoteUpdatePayload {
   title?: string
   summary?: string
   status?: string
+  priority?: NotePriority
   tags?: string[]
   tasks?: Task[]
   sections?: Sections
   blocks?: Block[]
+  collectionId?: string | null
+  reminderAt?: number | null
+  linkedEntities?: string[]
 }
 
 const appData = ref<AppData>({ notes: [], activeNoteId: null, collections: [], templates: [] })
@@ -194,6 +208,10 @@ function normalizeNotes(notes: Note[]): Note[] {
     tags: Array.isArray(note.tags) ? note.tags : [],
     tasks: Array.isArray(note.tasks) ? note.tasks : [],
     blocks: Array.isArray(note.blocks) ? note.blocks : [],
+    linkedEntities: Array.isArray(note.linkedEntities) ? note.linkedEntities : [],
+    priority: note.priority ?? 'Medium',
+    collectionId: note.collectionId ?? null,
+    reminderAt: typeof note.reminderAt === 'number' || note.reminderAt === null ? note.reminderAt : null,
   }))
 }
 
@@ -265,7 +283,7 @@ async function mockInvoke<T>(command: string, args?: Record<string, unknown>): P
       return write({ notes: remaining, activeNoteId: nextActive, collections, templates }) as T
     }
     case 'create_collection': {
-      const input = (args?.input as CollectionInputPayload) || { tag: 'Nouvelle', label: 'Nouvelle', accent: 'bg-emerald-50 text-emerald-700' }
+      const input = (args?.input as CollectionInputPayload) || { tag: 'Nouvelle', label: 'Nouvelle', accent: '#95a392' }
       const nextCollection = createMockCollection(input)
       return write({ notes, activeNoteId, collections: [nextCollection, ...collections], templates }) as T
     }
@@ -341,12 +359,16 @@ function createDefaultNote(partial: NoteUpdatePayload = {}): Note {
     title: partial.title || 'Nouvelle note',
     summary: partial.summary || 'Résumé en attente.',
     status: partial.status || 'Brouillon',
+    priority: partial.priority || 'Medium',
     tags: partial.tags || ['Général'],
     updatedAt: Date.now(),
     tasks: partial.tasks || [],
     sections:
       partial.sections || ({ problem: '', prioritization: '', standardization: '', snippet: '' } as Sections),
     blocks: partial.blocks || [],
+    collectionId: partial.collectionId ?? null,
+    reminderAt: partial.reminderAt ?? null,
+    linkedEntities: partial.linkedEntities ?? [],
   }
 }
 
@@ -356,7 +378,7 @@ function createMockCollection(input: CollectionInputPayload): Collection {
     id,
     tag: input.tag || 'Nouvelle',
     label: input.label || input.tag || 'Nouvelle',
-    accent: input.accent || 'bg-emerald-50 text-emerald-700',
+    accent: input.accent || '#95a392',
   }
 }
 
@@ -367,15 +389,15 @@ function createMockTemplate(input: TemplateInputPayload): TemplateDefinition {
     icon: input.icon || '🧩',
     title: input.title || 'Template personnalisé',
     description: input.description || 'Template enregistré via le mode Mock.',
-    accent: input.accent || 'bg-ink text-white',
+    accent: input.accent || '#3c4146',
     payload: input.payload || defaultTemplatePayload(),
   }
 }
 
 function defaultCollections(): Collection[] {
   return [
-    { id: self.crypto?.randomUUID ? self.crypto.randomUUID() : 'col-1', tag: 'Général', label: 'Général', accent: 'bg-emerald-50 text-emerald-700' },
-    { id: self.crypto?.randomUUID ? self.crypto.randomUUID() : 'col-2', tag: 'Produit', label: 'Produit', accent: 'bg-rose-50 text-rose-600' },
+    { id: self.crypto?.randomUUID ? self.crypto.randomUUID() : 'col-1', tag: 'Général', label: 'Général', accent: '#95a392' },
+    { id: self.crypto?.randomUUID ? self.crypto.randomUUID() : 'col-2', tag: 'Produit', label: 'Produit', accent: '#c9b0a1' },
   ]
 }
 
@@ -399,7 +421,7 @@ function defaultTemplateInput(): TemplateInputPayload {
     icon: '🧩',
     title: 'Template personnalisé',
     description: 'Définissez vos propres modèles dans le mode Mock.',
-    accent: 'bg-ink text-white',
+    accent: '#3c4146',
     payload: defaultTemplatePayload(),
   }
 }

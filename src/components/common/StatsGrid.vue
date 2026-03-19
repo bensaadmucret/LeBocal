@@ -11,12 +11,13 @@ const props = defineProps<{
       :key="stat.title"
       class="glass-card tap-effect animate-fade-in group rounded-3xl p-5"
     >
-      <p class="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] group-hover:text-royal dark:group-hover:text-lavender transition-colors">{{ stat.title }}</p>
+      <p class="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] group-hover:text-sage dark:group-hover:text-sage transition-colors">{{ stat.title }}</p>
       <p class="mt-2 font-display text-4xl text-[var(--text-main)]">{{ stat.value }}</p>
-      <div class="mt-3 flex items-center justify-between text-xs font-medium text-royal dark:text-lavender">
+      <div class="mt-3 flex items-center justify-between text-xs font-medium text-sage dark:text-sage">
         <span>{{ stat.detail }}</span>
         <span class="opacity-0 group-hover:opacity-100 transition-opacity">↗</span>
       </div>
     </article>
   </div>
 </template>
+```

@@ -12,7 +12,7 @@ const emit = defineEmits(['select'])
     v-for="note in props.notes"
     :key="note.title"
     class="glass-card tap-effect rounded-3xl p-4 animate-fade-in"
-    :class="note.id === props.activeId ? 'ring-2 ring-royal' : ''"
+    :class="note.id === props.activeId ? 'ring-2 ring-sage' : ''"
     role="button"
     tabindex="0"
     @click="emit('select', note.id)"
@@ -22,7 +22,7 @@ const emit = defineEmits(['select'])
       <span>{{ note.category }}</span>
       <span>{{ note.status }}</span>
     </div>
-    <h5 class="mt-2 font-display text-lg text-ink dark:text-lavender">{{ note.title }}</h5>
+    <h5 class="mt-2 font-display text-lg text-anthracite dark:text-sage">{{ note.title }}</h5>
     <p class="text-sm text-gray-500 dark:text-slate-400">{{ note.excerpt }}</p>
     <p class="mt-2 text-xs text-gray-400 dark:text-slate-600">Mis à jour {{ note.updated }}</p>
   </article>

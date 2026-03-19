@@ -171,7 +171,7 @@ function removeTag(tag: string) {
           <span>STATUT</span>
           <select
             v-model="localStatus"
-            class="bg-transparent text-royal dark:text-lavender focus:outline-none cursor-pointer"
+            class="bg-transparent text-sage dark:text-sage focus:outline-none cursor-pointer"
             @change="emitUpdate"
           >
             <option v-for="option in statusOptions" :key="option" :value="option">{{ option }}</option>
@@ -190,7 +190,7 @@ function removeTag(tag: string) {
         <button 
           type="button" 
           class="tap-effect rounded-2xl px-6 py-2.5 text-sm font-semibold transition-all shadow-lg"
-          :class="isEditing ? 'bg-royal text-white shadow-royal/20' : 'bg-indigo-600 text-white shadow-indigo-600/20'"
+          :class="isEditing ? 'bg-sage text-anthracite shadow-sage/10' : 'bg-clay text-anthracite shadow-clay/10'"
           @click="isEditing = !isEditing"
         >
           {{ isEditing ? 'Enregistrer' : 'Éditer' }}
@@ -226,7 +226,7 @@ function removeTag(tag: string) {
         <div v-if="localTags.length || props.editableTags">
           <p class="mb-2 text-[10px] uppercase tracking-[0.3em] text-gray-400 dark:text-slate-500 font-bold">Tags</p>
           <div v-if="!props.editableTags" class="flex flex-wrap gap-1.5">
-            <TagPill v-for="tag in localTags" :key="tag" :label="tag" class="text-[10px] py-0.5 px-2 dark:bg-royal/20 dark:text-lavender dark:border-royal/30" />
+            <TagPill v-for="tag in localTags" :key="tag" :label="tag" class="text-[10px] py-0.5 px-2 dark:bg-sage/20 dark:text-sage dark:border-sage/30" />
           </div>
           <div v-else class="space-y-2">
             <div class="flex flex-wrap gap-1.5">
@@ -244,10 +244,10 @@ function removeTag(tag: string) {
                 v-model="newTag"
                 type="text"
                 placeholder="Nouveau tag"
-                class="flex-1 rounded-xl border border-white/80 bg-white/80 px-3 py-1.5 text-xs text-gray-600 focus:border-royal focus:outline-none"
+                class="flex-1 rounded-xl border border-white/80 bg-white/80 px-3 py-1.5 text-xs text-gray-600 focus:border-sage focus:outline-none"
                 @keydown.enter.prevent="addTag"
               />
-              <button type="submit" class="rounded-xl bg-royal/10 px-3 py-1.5 text-[10px] font-bold text-royal hover:bg-royal hover:text-white transition-colors">AJOUTER</button>
+              <button type="submit" class="rounded-xl bg-sage/10 px-3 py-1.5 text-[10px] font-bold text-anthracite hover:bg-sage hover:text-white transition-colors">AJOUTER</button>
             </form>
           </div>
         </div>
@@ -256,7 +256,7 @@ function removeTag(tag: string) {
           <span class="text-[10px] uppercase tracking-[0.3em] text-gray-400 dark:text-slate-500 font-bold">Résumé</span>
           <textarea
             v-model="localSummary"
-            class="mt-1.5 w-full rounded-2xl border border-white/70 dark:border-white/10 bg-indigo-50/30 dark:bg-royal/5 p-3 text-xs leading-relaxed text-gray-600 dark:text-slate-300 focus:border-royal focus:outline-none transition-colors"
+            class="mt-1.5 w-full rounded-2xl border border-white/70 dark:border-white/10 bg-sage-50/10 dark:bg-sage/5 p-3 text-xs leading-relaxed text-gray-600 dark:text-slate-300 focus:border-sage focus:outline-none transition-colors"
             :rows="localSummary.length > 100 ? 3 : 2"
             @blur="emitUpdate"
           ></textarea>
@@ -273,7 +273,7 @@ function removeTag(tag: string) {
           >
             <input
               type="checkbox"
-              class="h-3.5 w-3.5 rounded-full border-gray-300 dark:border-slate-700 bg-transparent text-royal focus:ring-royal/20"
+              class="h-3.5 w-3.5 rounded-full border-gray-300 dark:border-slate-700 bg-transparent text-sage focus:ring-sage/20"
               :checked="task.done"
               @change="toggleTask(index)"
             />
@@ -292,7 +292,7 @@ function removeTag(tag: string) {
       <div>
         <div class="flex items-center justify-between mb-2">
           <p class="text-[10px] uppercase tracking-[0.3em] text-gray-400 dark:text-slate-500 font-bold">Contenu (Editor.js)</p>
-          <span class="text-[10px] font-bold text-royal dark:text-lavender bg-royal/10 dark:bg-royal/20 px-2 py-0.5 rounded-full">{{ localBlocks.length }} BLOCS</span>
+          <span class="text-[10px] font-bold text-sage dark:text-sage bg-sage/10 dark:bg-sage/20 px-2 py-0.5 rounded-full">{{ localBlocks.length }} BLOCS</span>
         </div>
         <div class="max-h-[400px] overflow-y-auto rounded-2xl border border-indigo-50/50 dark:border-white/5 bg-white/40 dark:bg-deep/20 p-1 custom-scrollbar">
           <EditorCanvas ref="editorCanvas" v-model="localBlocks" />
@@ -304,7 +304,7 @@ function removeTag(tag: string) {
         <div v-if="props.budgetTransactions?.length">
           <button 
             @click="showTransactions = !showTransactions"
-            class="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold hover:text-royal transition-colors"
+            class="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold hover:text-sage transition-colors"
           >
             <span>Transactions liées</span>
             <span>{{ showTransactions ? '−' : '+' }}</span>
@@ -335,14 +335,14 @@ function removeTag(tag: string) {
         <div v-if="props.timeline?.length">
           <button 
             @click="showTimeline = !showTimeline"
-            class="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold hover:text-royal transition-colors"
+            class="flex w-full items-center justify-between text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold hover:text-sage transition-colors"
           >
             <span>Chronologie</span>
             <span>{{ showTimeline ? '−' : '+' }}</span>
           </button>
           <ul v-if="showTimeline" class="mt-3 space-y-2 text-xs animate-fade-in pr-2">
             <li v-for="item in props.timeline" :key="item.event" class="flex items-start gap-3">
-              <span class="text-royal font-bold tabular-nums min-w-[45px]">{{ item.time }}</span>
+              <span class="text-sage font-bold tabular-nums min-w-[45px]">{{ item.time }}</span>
               <span class="text-slate-500">{{ item.event }}</span>
             </li>
           </ul>

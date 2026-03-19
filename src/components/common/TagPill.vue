@@ -3,7 +3,7 @@ const props = defineProps<{ label: string }>()
 </script>
 
 <template>
-  <span class="rounded-full bg-lilac/60 px-3 py-1 text-xs font-medium text-royal">
+  <span class="rounded-full bg-clay/20 px-3 py-1 text-xs font-medium text-sage">
     {{ props.label }}
   </span>
 </template>

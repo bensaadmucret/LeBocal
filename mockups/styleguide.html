@@ -11,8 +11,10 @@
       theme: {
         extend: {
           colors: {
-            royal: '#5b3ef1',
-            ink: '#2d224b'
+            sage: '#95a392',
+            clay: '#c9b0a1',
+            mist: '#f6eede',
+            anthracite: '#3c4146'
           },
           fontFamily: {
             display: ['Space Grotesk', 'Inter', 'sans-serif'],
@@ -27,16 +29,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --royal: #5b3ef1;
-      --ink: #2d224b;
-      --text-muted: #64748b;
-      --accent-neon: #D7FE03;
+      --sage: #95a392;
+      --anthracite: #3c4146;
+      --text-muted: #6a737b;
+      --clay: #c9b0a1;
     }
 
     body {
       min-height: 100vh;
-      background: linear-gradient(180deg, #f7f2ff 0%, #f1f5ff 55%, #e9f6ff 100%);
-      color: var(--ink);
+      background: #f6eede;
+      color: var(--anthracite);
       font-family: 'Inter', sans-serif;
       padding: 80px 40px;
     }
@@ -45,16 +47,16 @@
       content: '';
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at 24% 0%, rgba(150, 118, 255, 0.45), transparent 48%),
-        radial-gradient(circle at 76% 4%, rgba(106, 68, 235, 0.35), transparent 55%);
+      background: radial-gradient(circle at 24% 0%, rgba(149, 163, 146, 0.15), transparent 48%),
+        radial-gradient(circle at 76% 4%, rgba(201, 176, 161, 0.1), transparent 55%);
       z-index: -1;
     }
 
     .glass-card {
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.45);
-      border-radius: 32px;
-      box-shadow: 0 20px 60px rgba(78, 68, 180, 0.1);
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 40px;
+      box-shadow: 0 20px 60px rgba(78, 67, 51, 0.05);
       backdrop-filter: blur(12px);
     }
 
@@ -83,10 +85,10 @@
     }
 
     .nav-circle-btn.active {
-      background: var(--royal);
+      background: var(--sage);
       color: white;
-      box-shadow: 0 10px 25px rgba(91, 62, 241, 0.3);
-      border-color: var(--royal);
+      box-shadow: 0 10px 25px rgba(149, 163, 146, 0.3);
+      border-color: var(--sage);
     }
 
     .gradient-swatch {
@@ -108,9 +110,9 @@
   <div class="max-w-5xl mx-auto space-y-16">
     <!-- Header -->
     <header class="text-center">
-      <p class="text-xs uppercase tracking-[0.4em] text-indigo-500 font-bold mb-3">Design System · Premium V1</p>
+      <p class="text-xs uppercase tracking-[0.4em] text-sage font-bold mb-3">Design System · Zen Edition</p>
       <h1 class="text-7xl font-semibold font-display tracking-tighter">Charte Graphique</h1>
-      <p class="text-slate-500 mt-6 text-xl max-w-2xl mx-auto">Une élégance intemporelle basée sur le Royal Blue et la clarté spatiale.</p>
+      <p class="text-slate-500 mt-6 text-xl max-w-2xl mx-auto">Une élégance naturelle basée sur le Sage Green et la sérénité du vide.</p>
     </header>
 
     <!-- Colors -->
@@ -121,29 +123,29 @@
       </div>
       <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
         <div class="space-y-3 p-2 group">
-          <div class="color-swatch bg-[#5b3ef1] text-white">#5B3EF1</div>
-          <p class="text-sm font-bold">Royal Blue</p>
-          <p class="text-[10px] text-slate-400 leading-tight">Couleur primaire pour l'identité.</p>
+          <div class="color-swatch bg-[#95a392] text-white">#95A392</div>
+          <p class="text-sm font-bold">Sage Green</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Couleur primaire apaisante.</p>
         </div>
         <div class="space-y-3 p-2 group">
-          <div class="color-swatch bg-[#D7FE03] text-black">#D7FE03</div>
-          <p class="text-sm font-bold">Neon</p>
-          <p class="text-[10px] text-slate-400 leading-tight">Accent haute visibilité pour les CTA critiques.</p>
+          <div class="color-swatch bg-[#c9b0a1] text-white">#C9B0A1</div>
+          <p class="text-sm font-bold">Clay</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Couleur de terre pour les contrastes doux.</p>
         </div>
         <div class="space-y-3 p-2 group">
-          <div class="color-swatch bg-[#2d224b] text-white">#2D224B</div>
-          <p class="text-sm font-bold">Ink</p>
-          <p class="text-[10px] text-slate-400 leading-tight">Texte et titres.</p>
+          <div class="color-swatch bg-[#3c4146] text-white">#3C4146</div>
+          <p class="text-sm font-bold">Anthracite</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Texte et titres profonds.</p>
         </div>
         <div class="space-y-3 p-2 group">
           <div class="color-swatch bg-white text-slate-400 border border-slate-100">#FFFFFF</div>
-          <p class="text-sm font-bold">White Glass</p>
-          <p class="text-[10px] text-slate-400 leading-tight">Surfaces et cartes.</p>
+          <p class="text-sm font-bold">Pure White</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Surfaces et cartes lumineuses.</p>
         </div>
         <div class="space-y-3 p-2 group">
-          <div class="color-swatch bg-[#f2efff] text-slate-400">#F2EFFF</div>
-          <p class="text-sm font-bold">App Bg</p>
-          <p class="text-[10px] text-slate-400 leading-tight">Fonds doux.</p>
+          <div class="color-swatch bg-[#f6eede] text-slate-400">#F6EEDE</div>
+          <p class="text-sm font-bold">Mist (Bg)</p>
+          <p class="text-[10px] text-slate-400 leading-tight">Fond principal enveloppant.</p>
         </div>
       </div>
     </section>
@@ -307,9 +309,10 @@
         <div class="glass-card p-10 space-y-8">
           <h4 class="font-bold text-lg">Boutons Primaires</h4>
           <div class="flex flex-wrap gap-4">
-            <button class="bg-[#5b3ef1] text-white font-semibold rounded-2xl px-8 py-3.5 shadow-xl hover:scale-105 transition-transform">Action Royal Blue</button>
+            <button class="bg-[#95a392] text-white font-semibold rounded-2xl px-8 py-3.5 shadow-xl hover:scale-105 transition-transform">Action Zen Sage</button>
             <button class="bg-white border border-slate-200 text-slate-600 rounded-full px-8 py-3.5 shadow-sm">Bouton Secondaire</button>
           </div>
+          <p class="text-xs text-clay font-medium italic">Conseil : utiliser du texte blanc sur Sage uniquement si le fond est sombre, sinon privilégier Anthracite.</p>
         </div>
 
         <!-- Sidebar -->

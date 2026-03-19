@@ -148,8 +148,8 @@ onBeforeUnmount(() => {
                     :key="item.id"
                     class="cursor-pointer border-b border-white/50 last:border-b-0 dark:border-white/5"
                     :class="{
-                      'bg-royal/10 text-ink dark:bg-royal/20 dark:text-white': isActiveRow(section.id, index),
-                      'hover:bg-royal/5 dark:hover:bg-white/10': true,
+                      'bg-sage/10 text-anthracite dark:bg-sage/20 dark:text-white': isActiveRow(section.id, index),
+                      'hover:bg-sage/5 dark:hover:bg-white/10': true,
                     }"
                     @click="handleClickItem(item.id)"
                   >
@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
                         </div>
                       </div>
                       <div class="flex items-center gap-2 text-xs text-gray-400">
-                        <span v-if="item.badge" class="rounded-full bg-royal/10 px-2 py-1 text-royal dark:bg-royal/20 dark:text-royal-100">{{ item.badge }}</span>
+                        <span v-if="item.badge" class="rounded-full bg-sage/10 px-2 py-1 text-sage dark:bg-sage/20 dark:text-sage-100">{{ item.badge }}</span>
                         <span>{{ item.meta }}</span>
                       </div>
                     </div>

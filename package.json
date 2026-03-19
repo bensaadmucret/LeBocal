@@ -21,6 +21,7 @@
     "@editorjs/code": "^2.9.4",
     "@editorjs/editorjs": "^2.31.5",
     "@editorjs/header": "^2.8.8",
+    "@editorjs/image": "^2.10.3",
     "@editorjs/list": "^2.0.9",
     "@tauri-apps/api": "^2.10.1",
     "@tiptap/extension-placeholder": "^3.20.4",

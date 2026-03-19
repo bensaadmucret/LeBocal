@@ -641,7 +641,7 @@ function switchPlannerMode(mode: PlannerMode) {
               <div v-if="summary.targets" class="space-y-2">
                 <p class="text-sm font-medium text-ink">{{ summary.targets.label }}</p>
                 <div class="h-2 rounded-full bg-gray-200">
-                  <div class="h-full rounded-full bg-royal" :style="{ width: `${Math.min(100, summary.targets.progress)}%` }"></div>
+                  <div class="h-full rounded-full bg-sage" :style="{ width: `${Math.min(100, summary.targets.progress)}%` }"></div>
                 </div>
                 <p class="text-xs text-gray-500">{{ summary.targets.progress.toFixed(0) }}% – reste {{ summary.targets.remaining }}€</p>
               </div>
@@ -650,10 +650,10 @@ function switchPlannerMode(mode: PlannerMode) {
           </div>
         </div>
         <div class="flex flex-wrap gap-3">
-          <button class="rounded-full bg-white/80 px-5 py-2 text-sm text-royal shadow-card" :disabled="loading" @click="emit('refresh')">
+          <button class="rounded-full bg-white/80 px-5 py-2 text-sm text-sage shadow-card" :disabled="loading" @click="emit('refresh')">
             Actualiser
           </button>
-          <button class="flex items-center gap-2 rounded-full bg-royal px-5 py-2 text-sm text-white shadow-card" @click="startTripPlanning()">
+          <button class="flex items-center gap-2 rounded-full bg-sage px-5 py-2 text-sm text-anthracite shadow-card" @click="startTripPlanning()">
             <span>Planifier un budget</span>
             <span class="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">⌘⇧N</span>
           </button>
@@ -694,7 +694,7 @@ function switchPlannerMode(mode: PlannerMode) {
             <p class="text-xs uppercase tracking-[0.3em] text-gray-400">{{ accounts.length }} suivi(s)</p>
           </div>
           <button
-            class="ml-auto rounded-full border border-royal/50 px-4 py-1.5 text-sm text-royal hover:bg-royal/5"
+            class="ml-auto rounded-full border border-sage/50 px-4 py-1.5 text-sm text-sage hover:bg-sage/5"
             @click="showAccountForm = !showAccountForm"
           >
             {{ showAccountForm ? 'Fermer le formulaire' : 'Ajouter un compte' }}
@@ -756,11 +756,11 @@ function switchPlannerMode(mode: PlannerMode) {
                 <span>{{ Math.round((account.balance / account.target) * 100) }}%</span>
               </div>
               <div class="mt-1 h-2 rounded-full bg-white/60">
-                <div class="h-full rounded-full bg-royal" :style="{ width: `${Math.min(100, (account.balance / account.target) * 100)}%` }"></div>
+                <div class="h-full rounded-full bg-sage" :style="{ width: `${Math.min(100, (account.balance / account.target) * 100)}%` }"></div>
               </div>
             </div>
             <div class="mt-3 flex gap-2 text-xs">
-              <button class="rounded-full border border-white/70 px-3 py-1 text-gray-600 hover:text-royal" @click="startEditAccount(account)">
+              <button class="rounded-full border border-white/70 px-3 py-1 text-gray-600 hover:text-sage" @click="startEditAccount(account)">
                 Éditer
               </button>
               <button class="rounded-full border border-rose-200 px-3 py-1 text-rose-600 hover:bg-rose-50" @click="requestDeleteAccount(account.id)">
@@ -801,7 +801,7 @@ function switchPlannerMode(mode: PlannerMode) {
           </div>
           <div class="ml-auto">
             <button
-              class="rounded-full border border-royal/50 px-4 py-1.5 text-sm font-medium text-royal transition hover:bg-royal/5"
+              class="rounded-full border border-sage/50 px-4 py-1.5 text-sm font-medium text-sage transition hover:bg-sage/5"
               @click="showTransactionForm = !showTransactionForm"
             >
               {{ showTransactionForm ? 'Masquer le formulaire' : 'Nouvelle transaction' }}
@@ -838,7 +838,7 @@ function switchPlannerMode(mode: PlannerMode) {
               <option v-for="note in notes" :key="note.id" :value="note.id">{{ note.title }}</option>
             </select>
           </div>
-          <button class="w-full rounded-full bg-royal py-2 text-sm font-medium text-white" type="submit">
+          <button class="w-full rounded-full bg-sage py-2 text-sm font-medium text-anthracite" type="submit">
             {{ editingTransactionId ? 'Mettre à jour' : 'Enregistrer' }}
           </button>
         </form>
@@ -887,7 +887,7 @@ function switchPlannerMode(mode: PlannerMode) {
                 <td class="text-right">
                   <div class="flex justify-end gap-2 text-base">
                     <button
-                      class="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 transition hover:bg-gray-200 hover:text-royal"
+                      class="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 transition hover:bg-gray-200 hover:text-sage"
                       aria-label="Éditer"
                       @click="startEditTransaction(transaction)"
                     >
@@ -915,12 +915,12 @@ function switchPlannerMode(mode: PlannerMode) {
             <p class="text-sm text-gray-500">Visualisez vos voyages à venir et les comptes qui les financent.</p>
           </div>
           <div class="ml-auto flex flex-wrap gap-2">
-            <button class="rounded-full bg-royal px-5 py-2 text-sm font-medium text-white shadow-sm" @click="startTripPlanning()">Plan vacances</button>
+            <button class="rounded-full bg-sage px-5 py-2 text-sm font-medium text-anthracite shadow-sm" @click="startTripPlanning()">Plan vacances</button>
             <button class="rounded-full border border-emerald-400 px-5 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-50" @click="startBankPlanning()">Ajouter une banque</button>
           </div>
         </div>
         <div class="grid gap-4 xl:grid-cols-2">
-          <div class="rounded-[26px] border border-royal/20 bg-white/60 p-4 shadow-inner">
+          <div class="rounded-[26px] border border-sage/20 bg-white/60 p-4 shadow-inner">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="text-lg">✈️</span>
@@ -956,7 +956,7 @@ function switchPlannerMode(mode: PlannerMode) {
                     </p>
                   </div>
                   <div class="ml-auto flex gap-2 text-xs">
-                    <button class="rounded-full bg-white px-3 py-1 text-gray-600 shadow-sm hover:text-royal" @click="startTripPlanning(plan)">Éditer</button>
+                    <button class="rounded-full bg-white px-3 py-1 text-gray-600 shadow-sm hover:text-sage" @click="startTripPlanning(plan)">Éditer</button>
                     <button class="rounded-full bg-rose-50 px-3 py-1 text-rose-600 hover:bg-rose-100" @click="requestDeleteTrip(plan.id)">Suppr.</button>
                   </div>
                 </div>
@@ -1004,7 +1004,7 @@ function switchPlannerMode(mode: PlannerMode) {
                     <p v-if="profile.notes" class="text-xs text-gray-500">{{ profile.notes }}</p>
                   </div>
                   <div class="ml-auto flex gap-2 text-xs">
-                    <button class="rounded-full bg-white px-3 py-1 text-gray-600 shadow-sm hover:text-royal" @click="startBankPlanning(profile)">Éditer</button>
+                    <button class="rounded-full bg-white px-3 py-1 text-gray-600 shadow-sm hover:text-sage" @click="startBankPlanning(profile)">Éditer</button>
                     <button class="rounded-full bg-rose-50 px-3 py-1 text-rose-600 hover:bg-rose-100" @click="requestDeleteBankProfile(profile.id)">Suppr.</button>
                   </div>
                 </div>
@@ -1074,7 +1074,7 @@ function switchPlannerMode(mode: PlannerMode) {
             <div class="space-y-3 rounded-2xl border border-dashed border-gray-200 p-4">
               <div class="flex items-center justify-between">
                 <h4 class="text-sm font-semibold text-ink">Segments de transport</h4>
-                <button class="text-sm text-royal" @click="addTransportSegment">+ Ajouter un segment</button>
+                <button class="text-sm text-sage" @click="addTransportSegment">+ Ajouter un segment</button>
               </div>
               <div v-for="segment in tripForm.transports" :key="segment.id" class="grid gap-2 md:grid-cols-[1fr,1fr,120px,auto]">
                 <select v-model="segment.mode" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm">
@@ -1093,7 +1093,7 @@ function switchPlannerMode(mode: PlannerMode) {
               <div class="flex items-center justify-between">
                 <h4 class="text-sm font-semibold text-ink">Hébergement</h4>
                 <label class="flex items-center gap-2 text-sm text-gray-600">
-                  <input v-model="tripForm.lodgingEnabled" type="checkbox" class="rounded border-gray-300 text-royal focus:ring-royal" />
+                  <input v-model="tripForm.lodgingEnabled" type="checkbox" class="rounded border-gray-300 text-sage focus:ring-sage" />
                   Suivre les nuits
                 </label>
               </div>
@@ -1108,7 +1108,7 @@ function switchPlannerMode(mode: PlannerMode) {
             <div class="space-y-3 rounded-2xl border border-dashed border-gray-200 p-4">
               <div class="flex items-center justify-between">
                 <h4 class="text-sm font-semibold text-ink">Activités & repas</h4>
-                <button class="text-sm text-royal" @click="addActivityEstimate">+ Ajouter une ligne</button>
+                <button class="text-sm text-sage" @click="addActivityEstimate">+ Ajouter une ligne</button>
               </div>
               <div v-for="activity in tripForm.activities" :key="activity.id" class="grid gap-2 md:grid-cols-[1fr,1fr,120px,auto]">
                 <select v-model="activity.type" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm">
@@ -1126,7 +1126,7 @@ function switchPlannerMode(mode: PlannerMode) {
             <div class="space-y-3 rounded-2xl border border-dashed border-gray-200 p-4">
               <div class="flex items-center justify-between">
                 <h4 class="text-sm font-semibold text-ink">Alertes & rappels</h4>
-                <button class="text-sm text-royal" @click="addAlertReminder">+ Ajouter un rappel</button>
+                <button class="text-sm text-sage" @click="addAlertReminder">+ Ajouter un rappel</button>
               </div>
               <div v-for="alert in tripForm.alerts" :key="alert.id" class="grid gap-2 md:grid-cols-[1fr,1fr,auto]">
                 <input v-model="alert.label" type="text" placeholder="Ex. Réserver billets" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
@@ -1139,7 +1139,7 @@ function switchPlannerMode(mode: PlannerMode) {
                 </div>
                 <div class="flex items-center gap-3">
                   <label class="flex items-center gap-2 text-xs text-gray-500">
-                    <input v-model="alert.notifySystem" type="checkbox" class="rounded border-gray-300 text-royal focus:ring-royal" />
+                    <input v-model="alert.notifySystem" type="checkbox" class="rounded border-gray-300 text-sage focus:ring-sage" />
                     Notifier système
                   </label>
                   <button class="text-rose-500" @click.prevent="removeAlertReminder(alert.id)">✕</button>
@@ -1159,7 +1159,7 @@ function switchPlannerMode(mode: PlannerMode) {
 
             <div class="flex flex-wrap justify-end gap-3">
               <button class="rounded-full border border-gray-300 px-5 py-2 text-sm text-gray-600" @click="cancelPlanner">Annuler</button>
-              <button class="rounded-full bg-royal px-5 py-2 text-sm text-white" @click="submitTripPlan">{{ tripForm.id ? 'Mettre à jour' : 'Créer le plan' }}</button>
+              <button class="rounded-full bg-sage px-5 py-2 text-sm text-anthracite" @click="submitTripPlan">{{ tripForm.id ? 'Mettre à jour' : 'Créer le plan' }}</button>
             </div>
           </div>
 
