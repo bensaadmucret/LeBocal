@@ -1,0 +1,59 @@
+import { Meta, ColorPalette, ColorItem, Typeset } from '@storybook/blocks';
+
+<Meta title="System/Tokens" />
+
+# Design System Tokens
+
+## Colors
+
+The "Zen" palette focuses on natural, muted tones to provide a calm and focused environment.
+
+<ColorPalette>
+  <ColorItem
+    title="Sage (Accent)"
+    subtitle="--color-accent"
+    colors={{ Sage: '#95a392' }}
+  />
+  <ColorItem
+    title="Clay (Action)"
+    subtitle="--color-warning"
+    colors={{ Clay: '#c9b0a1' }}
+  />
+  <ColorItem
+    title="Mist (Background)"
+    subtitle="--mist"
+    colors={{ Mist: '#f6eede' }}
+  />
+  <ColorItem
+    title="Surface"
+    subtitle="--surface"
+    colors={{ Surface: '#faf9f6' }}
+  />
+  <ColorItem
+    title="Anthracite (Text)"
+    subtitle="--text-main"
+    colors={{ Anthracite: '#3c4146' }}
+  />
+</ColorPalette>
+
+## Typography
+
+**Font Families:**
+- **Display:** Space Grotesk (Headers, Branding)
+- **Sans:** Inter (Body, UI Controls)
+
+**Weights:** 400 (Regular), 500 (Medium), 600 (Semi-Bold)
+
+<Typeset
+  fontFamily="Space Grotesk, Inter, sans-serif"
+  fontSizes={['12px', '14px', '16px', '20px', '24px', '32px', '40px', '48px']}
+  fontWeight={600}
+  sampleText="The quick brown fox jumps over the lazy dog"
+/>
+
+<Typeset
+  fontFamily="Inter, sans-serif"
+  fontSizes={['12px', '14px', '16px', '20px', '24px']}
+  fontWeight={400}
+  sampleText="The quick brown fox jumps over the lazy dog"
+/>

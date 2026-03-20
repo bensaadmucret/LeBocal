@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
 
+/* Tailwind CSS Base Directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -144,4 +145,30 @@ body {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.2);
+}
+
+/* Zen Atmosphere Background */
+.zen-atmosphere {
+  position: relative;
+  background-color: #f6eede;
+  z-index: 1;
+}
+
+.zen-atmosphere::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 24% 0%, rgba(149, 163, 146, 0.25), transparent 60%),
+              radial-gradient(circle at 76% 4%, rgba(201, 176, 161, 0.2), transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.dark .zen-atmosphere {
+  background-color: #120d24;
+}
+
+.dark .zen-atmosphere::before {
+  background: radial-gradient(circle at 24% 0%, rgba(124, 145, 255, 0.1), transparent 48%),
+              radial-gradient(circle at 76% 4%, rgba(255, 143, 151, 0.05), transparent 55%);
 }
