@@ -21,7 +21,6 @@ import { useEditorBridge, type EditorActions } from './composables/useEditorBrid
 import CommandPalette from './components/common/CommandPalette.vue'
 import type { CommandPaletteSection } from './types/commandPalette'
 import NoteComposerModal from './components/notes/NoteComposerModal.vue'
-import StyleGuide from './components/common/StyleGuide.vue'
 import {
   buildPaletteSections,
   isCacheFresh,
@@ -1172,8 +1171,6 @@ function serializeSyncPayload(payload: {
       @publish="handleComposerPublish"
       @create-collection="handleComposerCreateCollection"
     />
-
-    <StyleGuide />
 
     <transition name="fade">
       <div
