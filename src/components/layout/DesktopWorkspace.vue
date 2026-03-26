@@ -5,6 +5,7 @@ import NotesList from '../notes/NotesList.vue'
 import ActiveNotePanel from '../notes/ActiveNotePanel.vue'
 import ShortcutSettings from '../settings/ShortcutSettings.vue'
 import BudgetWorkspace from '../budget/BudgetWorkspace.vue'
+import CalendarWorkspace from '../calendar/CalendarWorkspace.vue'
 import { useTheme } from '../../composables/useTheme'
 import type {
   BudgetAccount,
@@ -35,7 +36,7 @@ const props = defineProps<{
     blocks: Block[]
   }
   timeline: { time: string; event: string }[]
-  mode?: 'workspace' | 'settings' | 'budget'
+  mode?: 'workspace' | 'settings' | 'budget' | 'calendar'
   quickFlow?: { reviewCount: number; pendingBlocks: number; lastSyncLabel: string }
   shortcutHints?: { createNote?: string | null }
   budgetSummary?: {
@@ -91,6 +92,8 @@ const emit = defineEmits([
   'close-budget-planner',
   'refresh-budget',
   'open-command-palette',
+  'create-note-from-event',
+  'create-budget-transaction-from-event',
 ])
 
 
@@ -168,8 +171,8 @@ function forwardClosePlanner() {
 
     <!-- Sidebar -->
     <aside 
-      class="glass-card sticky top-6 lg:top-10 self-start flex w-full lg:w-60 flex-col items-center gap-4 lg:gap-6 rounded-[32px] lg:rounded-[40px] p-5 lg:p-6 animate-fade-in shadow-xl dark:bg-[var(--surface)] transition-all duration-300 overflow-hidden"
-      :class="[sidebarOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 lg:max-h-none opacity-0 lg:opacity-100 hidden lg:flex']"
+      class="sticky top-6 lg:top-10 self-start flex w-full lg:w-60 flex-col items-center gap-4 lg:gap-6 rounded-[32px] lg:rounded-[40px] p-5 lg:p-6 animate-fade-in shadow-xl dark:bg-[var(--surface)] transition-all duration-300 overflow-hidden z-50"
+      :class="[sidebarOpen ? 'max-h-[1000px] opacity-100 bg-[var(--surface-card)]' : 'max-h-0 lg:max-h-none opacity-0 lg:opacity-100 hidden lg:flex glass-card']"
     >
       <div class="text-center">
         <p class="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">Le Bocal</p>
@@ -182,7 +185,7 @@ function forwardClosePlanner() {
           :key="item.label"
           class="tap-effect flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition-all"
           :class="item.active ? 'bg-sage text-anthracite shadow-md scale-105 font-semibold' : 'text-gray-500 dark:text-slate-400 hover:bg-white/70 dark:hover:bg-white/5'"
-          @click="emit('select-nav', item.label)"
+          @click="emit('select-nav', item.label); sidebarOpen = false"
         >
           <span>{{ item.icon }}</span>
           <span>{{ item.label }}</span>
@@ -338,8 +341,8 @@ function forwardClosePlanner() {
         </div>
       </section>
 
-      <!-- Settings & Budget Views -->
-      <section v-if="mode === 'settings' || mode === 'budget'" class="animate-fade-in">
+      <!-- Settings, Budget & Calendar Views -->
+      <section v-if="mode === 'settings' || mode === 'budget' || mode === 'calendar'" class="animate-fade-in">
         <div v-if="mode === 'settings'" class="grid gap-6 lg:grid-cols-[minmax(0,2fr),minmax(0,1fr)]">
           <ShortcutSettings />
           <div class="glass-card rounded-[32px] border border-dashed border-gray-200 bg-white/80 p-6 text-left">
@@ -363,6 +366,16 @@ function forwardClosePlanner() {
             @open-planner="forwardOpenPlanner"
             @close-planner="forwardClosePlanner"
             @refresh="() => emit('refresh-budget')"
+          />
+        </div>
+
+        <div v-else-if="mode === 'calendar'">
+          <CalendarWorkspace
+            :notes="props.budgetNotes || []"
+            :budget-accounts="props.budgetAccounts || []"
+            :budget-categories="props.budgetCategoryOptions || []"
+            @create-note-from-event="(title, eventId) => emit('create-note-from-event', title, eventId)"
+            @create-budget-transaction-from-event="(payload) => emit('create-budget-transaction-from-event', payload)"
           />
         </div>
       </section>

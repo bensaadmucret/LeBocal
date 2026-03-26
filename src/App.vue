@@ -21,6 +21,8 @@ import { useEditorBridge, type EditorActions } from './composables/useEditorBrid
 import CommandPalette from './components/common/CommandPalette.vue'
 import type { CommandPaletteSection } from './types/commandPalette'
 import NoteComposerModal from './components/notes/NoteComposerModal.vue'
+import CalendarWorkspace from './components/calendar/CalendarWorkspace.vue'
+import { useCalendarStore } from './stores/useCalendarStore'
 import {
   buildPaletteSections,
   isCacheFresh,
@@ -41,6 +43,7 @@ const baseNav = [
   { label: 'Tableau de bord', icon: '🏠' },
   { label: 'Notes', icon: '🗒️' },
   { label: 'Budget', icon: '💶' },
+  { label: 'Calendrier', icon: '📅' },
   { label: 'Paramètres', icon: '⚙️' },
 ]
 
@@ -275,6 +278,7 @@ const shortcutHints = computed(() => ({
 
 const budgetPlannerOpen = ref(false)
 const budgetPlannerMode = ref<PlannerMode>('vacation')
+const calendarStore = useCalendarStore()
 
 function triggerEditorAction(action: keyof EditorActions) {
   const actions = editorEntry.value.actions
@@ -387,6 +391,7 @@ const quickFlow = computed(() => {
 const workspaceMode = computed(() => {
   if (activeNav.value === 'Paramètres') return 'settings'
   if (activeNav.value === 'Budget') return 'budget'
+  if (activeNav.value === 'Calendrier') return 'calendar'
   return 'workspace'
 })
 
@@ -965,6 +970,51 @@ async function handleShare() {
   pushLog('info', 'Export markdown téléchargé')
 }
 
+async function handleCreateNoteFromEvent(title: string, eventId: string) {
+  try {
+    const notePayload = {
+      title: `Événement: ${title}`,
+      summary: `Note créée automatiquement pour l'événement "${title}"`,
+      status: 'Brouillon',
+      tags: ['Calendrier'],
+    }
+    await store.createNote(notePayload)
+    showToast('Note créée depuis le calendrier', 'success')
+    pushLog('success', `Note créée pour l'événement: ${title}`)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de créer la note'
+    showToast(message, 'error')
+  }
+}
+
+async function handleCreateBudgetTransactionFromEvent(payload: {
+  eventId: string
+  amount: number
+  type: 'expense' | 'income'
+  accountId: string
+  categoryId: string
+  label: string
+  date: Date
+}) {
+  try {
+    await budgetStore.recordTransaction({
+      accountId: payload.accountId,
+      categoryId: payload.categoryId,
+      amount: payload.amount,
+      type: payload.type,
+      date: payload.date.toISOString(),
+      label: payload.label,
+      memo: `Transaction créée depuis l'événement calendrier`,
+      noteId: null,
+    })
+    showToast('Transaction créée depuis le calendrier', 'success')
+    pushLog('success', 'Transaction liée à un événement calendrier')
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Impossible de créer la transaction'
+    showToast(message, 'error')
+  }
+}
+
 function downloadTextFile(text: string, filename: string) {
   const blob = new Blob([text], { type: 'text/plain' })
   const url = URL.createObjectURL(blob)
@@ -1094,6 +1144,8 @@ function serializeSyncPayload(payload: {
         @close-budget-planner="handleCloseBudgetPlanner"
         @refresh-budget="handleRefreshBudget"
         @open-command-palette="() => handleCommandPaletteOpen()"
+        @create-note-from-event="handleCreateNoteFromEvent"
+        @create-budget-transaction-from-event="handleCreateBudgetTransactionFromEvent"
       />
     </div>
 
