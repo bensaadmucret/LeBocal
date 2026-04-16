@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import StatsGrid from '../common/StatsGrid.vue'
 import NotesList from '../notes/NotesList.vue'
 import ActiveNotePanel from '../notes/ActiveNotePanel.vue'
@@ -7,6 +7,7 @@ import ShortcutSettings from '../settings/ShortcutSettings.vue'
 import BudgetWorkspace from '../budget/BudgetWorkspace.vue'
 import CalendarWorkspace from '../calendar/CalendarWorkspace.vue'
 import { useTheme } from '../../composables/useTheme'
+import { useUserStore } from '../../stores/useUserStore'
 import type {
   BudgetAccount,
   BudgetAlert,
@@ -66,6 +67,36 @@ const props = defineProps<{
   budgetPlannerOpen?: boolean
   budgetPlannerMode?: 'vacation' | 'bank'
 }>()
+
+const user = useUserStore()
+
+// Local ref for avatar (same pattern as UserSettings)
+const sidebarAvatarPath = ref('')
+
+const sidebarInitial = computed(() => {
+  const name = user.profile.value?.displayName
+  return name ? name[0].toUpperCase() : '?'
+})
+
+const sidebarAvatarUrl = computed(() => {
+  if (sidebarAvatarPath.value?.startsWith('data:image/')) {
+    return sidebarAvatarPath.value
+  }
+  return null
+})
+
+// Load avatar on mount
+onMounted(() => {
+  sidebarAvatarPath.value = user.profile.value?.avatarPath || ''
+})
+
+// Watch for changes from store (same pattern as UserSettings)
+watch(() => user.profile.value?.avatarPath, (newPath) => {
+  if (newPath !== sidebarAvatarPath.value) {
+    sidebarAvatarPath.value = newPath || ''
+    console.log('Sidebar avatar updated:', newPath?.slice(0, 50))
+  }
+}, { immediate: true })
 
 const emit = defineEmits([
   'create-note',
@@ -149,6 +180,10 @@ function forwardOpenPlanner(mode: 'vacation' | 'bank') {
 function forwardClosePlanner() {
   emit('close-budget-planner')
 }
+
+onMounted(() => {
+  user.load()
+})
 </script>
 
 <template>
@@ -178,7 +213,16 @@ function forwardClosePlanner() {
         <p class="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">Le Bocal</p>
         <p class="text-sm text-[var(--text-muted)] opacity-80">Workspace</p>
       </div>
-      <img src="https://i.pravatar.cc/96" class="h-16 w-16 rounded-2xl border-2 border-white shadow-lg" alt="avatar" />
+      <div class="h-16 w-16 rounded-2xl border-2 border-white shadow-lg overflow-hidden bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center">
+        <img 
+          v-if="sidebarAvatarUrl" 
+          :src="sidebarAvatarUrl" 
+          class="h-full w-full object-cover" 
+          alt="avatar" 
+          @error="console.error('Sidebar avatar failed to load')"
+        />
+        <span v-else class="text-white font-semibold text-2xl">{{ sidebarInitial }}</span>
+      </div>
       <nav class="flex w-full flex-col gap-4">
         <button
           v-for="item in props.navItems"

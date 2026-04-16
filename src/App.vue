@@ -1,1156 +1,153 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
-import DesktopWorkspace from './components/layout/DesktopWorkspace.vue'
-import { useNotesStore } from './stores/useNotesStore'
-import type { Task, NoteUpdatePayload, Block, Note, CollectionInputPayload } from './stores/useNotesStore'
-import { useBudgetStore } from './stores/useBudgetStore'
-import type {
-  BudgetAccountInput,
-  BudgetTransactionInput,
-  BudgetTransaction,
-  BudgetTripPlanInput,
-  BudgetTripPlan,
-  BudgetBankProfileInput,
-} from './stores/useBudgetStore'
-import NotesList from './components/notes/NotesList.vue'
-import { useFeedback } from './composables/useFeedback'
-import ActiveNotePanel from './components/notes/ActiveNotePanel.vue'
-import { useCommandShortcuts } from './composables/useCommandShortcuts'
-import type { CommandId } from './composables/useCommandShortcuts'
-import { useEditorBridge, type EditorActions } from './composables/useEditorBridge'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAppShell } from './composables/useAppShell'
+import { useTheme } from './composables/useTheme'
+import { useUserStore } from './stores/useUserStore'
 import CommandPalette from './components/common/CommandPalette.vue'
-import type { CommandPaletteSection } from './types/commandPalette'
 import NoteComposerModal from './components/notes/NoteComposerModal.vue'
-import CalendarWorkspace from './components/calendar/CalendarWorkspace.vue'
-import { useCalendarStore } from './stores/useCalendarStore'
-import {
-  buildPaletteSections,
-  isCacheFresh,
-  loadPaletteCacheFromStorage,
-  paletteEntryId,
-  savePaletteCacheToStorage,
-  signatureForEntries,
-  truncatePaletteEntries,
-  clearPaletteCacheStorage,
-  type BudgetTransactionDisplay,
-  type CommandPaletteCatalogEntry,
-  type PaletteNoteSnapshot,
-  type PaletteTransactionSnapshot,
-  type PaletteTripSnapshot,
-} from './features/commandPalette/paletteEngine'
+import type { Block } from './stores/useNotesStore'
 
-const baseNav = [
-  { label: 'Tableau de bord', icon: '🏠' },
-  { label: 'Notes', icon: '🗒️' },
-  { label: 'Budget', icon: '💶' },
-  { label: 'Calendrier', icon: '📅' },
-  { label: 'Paramètres', icon: '⚙️' },
-]
+const route = useRoute()
+const router = useRouter()
+const shell = useAppShell()
+const { isDark, toggleTheme } = useTheme()
+const user = useUserStore()
 
-const PALETTE_SECTION_LIMITS = {
-  notes: 18,
-  transactions: 18,
-  trips: 10,
-}
+const sidebarOpen = ref(false)
 
-const PALETTE_CACHE_KEY = 'le-bocal:command-palette-cache:v1'
-const PALETTE_CACHE_MAX_ENTRIES = 150
-const PALETTE_CACHE_TTL_MS = 1000 * 60 * 60 * 24 // 24h
+// Avatar logic (same as DesktopWorkspace)
+const sidebarAvatarPath = ref('')
 
-const store = useNotesStore()
-const budgetStore = useBudgetStore()
-const showAllNotes = ref(false)
-const showEditorModal = ref(false)
-const noteComposerOpen = ref(false)
-const noteComposerSavingMode = ref<null | 'save' | 'publish'>(null)
-const noteComposerClearTrigger = ref(0)
-const pendingDeleteId = ref<string | null>(null)
-const activeNav = ref('Tableau de bord')
-const lastSyncAt = ref<number | null>(null)
-const { toasts, logs, showToast, dismissToast, pushLog } = useFeedback()
-const initialSyncCompleted = ref(false)
-const { matchEventToCommand, getShortcut, formatShortcutLabel } = useCommandShortcuts()
-const { editorEntry } = useEditorBridge()
-const commandPaletteOpen = ref(false)
-const commandPaletteQuery = ref('')
-const commandPaletteOffline = ref(false)
-const canUseWindow = typeof window !== 'undefined'
-const updateOfflineIndicator = () => {
-  if (typeof navigator === 'undefined') return
-  commandPaletteOffline.value = !navigator.onLine
-}
-type PlannerMode = 'vacation' | 'bank'
+const sidebarInitial = computed(() => {
+  const name = user.profile.value?.displayName
+  return name ? name[0].toUpperCase() : '?'
+})
+
+const sidebarAvatarUrl = computed(() => {
+  if (sidebarAvatarPath.value?.startsWith('data:image/')) {
+    return sidebarAvatarPath.value
+  }
+  return null
+})
+
+onMounted(() => {
+  sidebarAvatarPath.value = user.profile.value?.avatarPath || ''
+})
+
+watch(() => user.profile.value?.avatarPath, (newPath) => {
+  if (newPath !== sidebarAvatarPath.value) {
+    sidebarAvatarPath.value = newPath || ''
+  }
+}, { immediate: true })
+
+const navItems = computed(() => [
+  { label: 'Tableau de bord', icon: '🏠', to: '/dashboard', active: route.path === '/dashboard' || route.path === '/' },
+  { label: 'Notes', icon: '🗒️', to: '/notes', active: route.path.startsWith('/notes') },
+  { label: 'Budget', icon: '💶', to: '/budget', active: route.path === '/budget' },
+  { label: 'Calendrier', icon: '📅', to: '/calendar', active: route.path === '/calendar' },
+  { label: 'Paramètres', icon: '⚙️', to: '/settings', active: route.path === '/settings' },
+])
+
+const quickFlow = computed(() => {
+  const notes = shell.store.notes.value
+  const reviewCount = notes.filter((note) => note.status?.toLowerCase().includes('rev')).length
+  const pendingBlocks = notes.reduce((sum, note) => sum + (note.blocks?.length || 0), 0)
+  const lastSyncLabel = shell.lastSyncAt.value ? shell.formatRelativeTime(shell.lastSyncAt.value) : '—'
+  return { reviewCount, pendingBlocks, lastSyncLabel }
+})
 
 const toastVariants: Record<string, string> = {
   info: 'bg-ink text-white',
   success: 'bg-emerald-500 text-white',
   error: 'bg-rose-600 text-white',
 }
-
-function handleOpenBudgetPlanner(mode: PlannerMode) {
-  openBudgetPlanner(mode)
-}
-
-function handleCloseBudgetPlanner() {
-  closeBudgetPlanner()
-}
-
-async function handleCreateBudgetAccount(payload: BudgetAccountInput & { target?: number | null; alertThreshold?: number | null }) {
-  try {
-    await budgetStore.createAccount(payload)
-    showToast('Compte budget créé', 'success')
-    pushLog('success', `Compte créé : ${payload.name}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Impossible de créer le compte"
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleCreateBudgetTransaction(payload: BudgetTransactionInput) {
-  try {
-    await budgetStore.recordTransaction(payload)
-    showToast('Transaction enregistrée', 'success')
-    pushLog('success', `Transaction ${payload.type === 'expense' ? 'débit' : 'crédit'} enregistrée`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Impossible d'enregistrer la transaction"
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleUpdateBudgetAccount({ accountId, input }: { accountId: string; input: Partial<BudgetAccountInput> & { target?: number | null; alertThreshold?: number | null } }) {
-  try {
-    await budgetStore.updateAccount(accountId, input)
-    showToast('Compte mis à jour', 'success')
-    pushLog('success', `Compte mis à jour : ${input.name || accountId}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de mettre à jour le compte'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleDeleteBudgetAccount(accountId: string) {
-  try {
-    await budgetStore.deleteAccount(accountId)
-    showToast('Compte supprimé', 'info')
-    pushLog('info', `Compte supprimé : ${accountId}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Suppression du compte impossible'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleUpdateBudgetTransaction({ transactionId, input }: { transactionId: string; input: Partial<BudgetTransactionInput> }) {
-  try {
-    await budgetStore.updateTransaction(transactionId, input)
-    showToast('Transaction mise à jour', 'success')
-    pushLog('success', `Transaction mise à jour : ${transactionId}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de mettre à jour la transaction'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleDeleteBudgetTransaction(transactionId: string) {
-  try {
-    await budgetStore.deleteTransaction(transactionId)
-    showToast('Transaction supprimée', 'info')
-    pushLog('info', `Transaction supprimée : ${transactionId}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Suppression de la transaction impossible'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleLinkBudgetTransactionNote({ transactionId, noteId }: { transactionId: string; noteId: string | null }) {
-  try {
-    await budgetStore.linkTransactionToNote(transactionId, noteId)
-    showToast(noteId ? 'Transaction associée à la note' : 'Association retirée', 'success')
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Association impossible'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleComposerCreateCollection(payload: CollectionInputPayload) {
-  try {
-    await store.createCollection(payload)
-    showToast('Collection créée', 'success')
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de créer la collection'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleSaveBudgetTripPlan(payload: BudgetTripPlanInput) {
-  try {
-    await budgetStore.saveTripPlan(payload)
-    showToast(payload.id ? 'Plan vacances mis à jour' : 'Plan vacances enregistré', 'success')
-    pushLog('success', `Plan vacances ${payload.id ? 'mis à jour' : 'créé'} : ${payload.title}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de sauvegarder le plan vacances'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleDeleteBudgetTripPlan(planId: string) {
-  try {
-    await budgetStore.deleteTripPlan(planId)
-    showToast('Plan vacances supprimé', 'info')
-    pushLog('info', `Plan vacances supprimé : ${planId}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de supprimer le plan'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleCreateBankProfile(payload: BudgetBankProfileInput) {
-  try {
-    await budgetStore.createBankProfile(payload)
-    showToast('Banque ajoutée', 'success')
-    pushLog('success', `Banque ajoutée : ${payload.bankName}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de créer le compte bancaire'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleUpdateBankProfile({ profileId, input }: { profileId: string; input: Partial<BudgetBankProfileInput> }) {
-  try {
-    await budgetStore.updateBankProfile(profileId, input)
-    showToast('Banque mise à jour', 'success')
-    pushLog('success', `Banque mise à jour : ${input.bankName || profileId}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de mettre à jour la banque'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleDeleteBankProfile(profileId: string) {
-  try {
-    await budgetStore.deleteBankProfile(profileId)
-    showToast('Banque supprimée', 'info')
-    pushLog('info', `Banque supprimée : ${profileId}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de supprimer la banque'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-async function handleRefreshBudget() {
-  try {
-    await budgetStore.refresh()
-    showToast('Budget synchronisé', 'info')
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de rafraîchir le budget'
-    showToast(message, 'error')
-    pushLog('error', message)
-  }
-}
-
-const logBadgeVariants: Record<string, string> = {
-  info: 'bg-gray-200 text-gray-700',
-  success: 'bg-emerald-100 text-emerald-700',
-  error: 'bg-rose-100 text-rose-600',
-}
-const lastSyncedPayload = new Map<string, string>()
-
-function shortcutLabelFor(id: CommandId) {
-  const combo = getShortcut(id)
-  return combo ? formatShortcutLabel(combo) : null
-}
-
-const shortcutHints = computed(() => ({
-  createNote: shortcutLabelFor('create-note'),
-}))
-
-const budgetPlannerOpen = ref(false)
-const budgetPlannerMode = ref<PlannerMode>('vacation')
-const calendarStore = useCalendarStore()
-
-function triggerEditorAction(action: keyof EditorActions) {
-  const actions = editorEntry.value.actions
-  if (!actions || typeof actions[action] !== 'function') {
-    showToast('Ouvrez une note pour insérer un bloc', 'info')
-    pushLog('info', 'Commande ignorée : aucun éditeur actif')
-    return
-  }
-  Promise.resolve(actions[action]())
-    .catch((err) => {
-      console.error('Editor action failed', err)
-      showToast("Impossible d'insérer le bloc", 'error')
-    })
-}
-
-function executeCommand(commandId: CommandId | null) {
-  if (!commandId) return false
-  switch (commandId) {
-    case 'create-note':
-      if (workspaceMode.value === 'budget') {
-        openBudgetPlanner('vacation')
-        return true
-      }
-      handleCreateNote()
-      return true
-    case 'duplicate-note':
-      if (!currentNoteId.value) {
-        showToast('Aucune note à dupliquer', 'info')
-        return false
-      }
-      void handleDuplicateActiveNote()
-      return true
-    case 'insert-text-block':
-      triggerEditorAction('insertTextBlock')
-      return true
-    case 'insert-checklist-block':
-      triggerEditorAction('insertChecklistBlock')
-      return true
-    case 'insert-code-block':
-      triggerEditorAction('insertCodeBlock')
-      return true
-    default:
-      return false
-  }
-}
-
-function handleGlobalKeydown(event: KeyboardEvent) {
-  if (event.defaultPrevented) return
-  const commandId = matchEventToCommand(event)
-  if (!commandId) return
-  const handled = executeCommand(commandId)
-  if (handled) {
-    event.preventDefault()
-    event.stopPropagation()
-  }
-}
-
-onMounted(async () => {
-  try {
-    await Promise.all([store.refresh(), budgetStore.refresh()])
-    lastSyncAt.value = Date.now()
-  } finally {
-    initialSyncCompleted.value = true
-  }
-  if (canUseWindow) {
-    window.addEventListener('keydown', handleGlobalKeydown, true)
-    window.addEventListener('keydown', handlePaletteShortcut, true)
-    window.addEventListener('online', updateOfflineIndicator)
-    window.addEventListener('offline', updateOfflineIndicator)
-    updateOfflineIndicator()
-  }
-})
-
-onBeforeUnmount(() => {
-  if (canUseWindow) {
-    window.removeEventListener('keydown', handleGlobalKeydown, true)
-    window.removeEventListener('keydown', handlePaletteShortcut, true)
-    window.removeEventListener('online', updateOfflineIndicator)
-    window.removeEventListener('offline', updateOfflineIndicator)
-  }
-})
-
-watch(
-  () => store.activeNote.value,
-  (note) => {
-    if (!note) {
-      showEditorModal.value = false
-      return
-    }
-    lastSyncedPayload.set(note.id, serializeSyncPayload(normalizeSyncPayload(note)))
-  },
-  { immediate: true, deep: true },
-)
-
-const recentLogs = computed(() => logs.value.slice(0, 6))
-const isBackgroundSyncing = computed(() => initialSyncCompleted.value && store.loading.value)
-
-const quickFlow = computed(() => {
-  const notes = store.notes.value
-  const reviewCount = notes.filter((note) => note.status?.toLowerCase().includes('rev')).length
-  const pendingBlocks = notes.reduce((sum, note) => sum + (note.blocks?.length || 0), 0)
-  const lastSyncLabel = lastSyncAt.value ? formatRelativeTime(lastSyncAt.value) : '—'
-  return {
-    reviewCount,
-    pendingBlocks,
-    lastSyncLabel,
-  }
-})
-
-const workspaceMode = computed(() => {
-  if (activeNav.value === 'Paramètres') return 'settings'
-  if (activeNav.value === 'Budget') return 'budget'
-  if (activeNav.value === 'Calendrier') return 'calendar'
-  return 'workspace'
-})
-
-const budgetSummary = computed(() => {
-  const accounts = budgetStore.accounts.value
-  const currency = budgetStore.preferences.value.defaultCurrency || 'EUR'
-  const targetAccount = accounts.find((account) => typeof account.target === 'number' && account.target > 0)
-  const targets = targetAccount?.target
-    ? {
-        label: targetAccount.name,
-        progress: Math.min(100, (targetAccount.balance / targetAccount.target) * 100 || 0),
-        remaining: Math.max(0, Math.round((targetAccount.target - targetAccount.balance) * 100) / 100),
-      }
-    : null
-  return {
-    totalBalance: budgetStore.totalBalance.value,
-    currency,
-    accountCount: accounts.length,
-    targets,
-  }
-})
-
-const budgetCategoryBreakdown = computed(() => {
-  const totals: Record<string, number> = {}
-  for (const transaction of budgetStore.transactions.value) {
-    totals[transaction.categoryId] = (totals[transaction.categoryId] || 0) + transaction.amount
-  }
-  return budgetStore.categories.value
-    .map((category) => ({
-      id: category.id,
-      name: category.name,
-      total: Math.round((totals[category.id] || 0) * 100) / 100,
-      type: category.type,
-      color: category.color,
-      icon: category.icon,
-    }))
-    .filter((category) => category.total !== 0)
-})
-
-const budgetTransactionsDisplay = computed(() => {
-  const accounts = budgetStore.accounts.value
-  const categories = budgetStore.categories.value
-  const fallbackCurrency = budgetStore.preferences.value.defaultCurrency || 'EUR'
-  return budgetStore.transactions.value.map((transaction) => {
-    const account = accounts.find((acct) => acct.id === transaction.accountId)
-    const category = categories.find((cat) => cat.id === transaction.categoryId)
-    return {
-      ...transaction,
-      accountName: account?.name,
-      accountCurrency: account?.currency || fallbackCurrency,
-      categoryName: category?.name,
-      categoryColor: category?.color,
-    }
-  })
-})
-
-const budgetNotes = computed(() =>
-  store.notes.value.map((note) => ({
-    id: note.id,
-    title: note.title || 'Sans titre',
-  })),
-)
-
-const budgetTripPlans = computed(() => budgetStore.tripPlans.value)
-const budgetBankProfiles = computed(() => budgetStore.bankProfiles.value)
-
-const budgetNoteTransactions = computed(() => {
-  const accounts = budgetStore.accounts.value
-  const categories = budgetStore.categories.value
-  const fallbackCurrency = budgetStore.preferences.value.defaultCurrency || 'EUR'
-  return budgetStore.transactions.value.reduce(
-    (acc, transaction) => {
-      if (!transaction.noteId) return acc
-      const account = accounts.find((acct) => acct.id === transaction.accountId)
-      const category = categories.find((cat) => cat.id === transaction.categoryId)
-      if (!acc[transaction.noteId]) acc[transaction.noteId] = []
-      acc[transaction.noteId].push({
-        ...transaction,
-        accountName: account?.name,
-        categoryName: category?.name,
-        currency: account?.currency || fallbackCurrency,
-      })
-      return acc
-    },
-    {} as Record<string, (BudgetTransaction & { accountName?: string; categoryName?: string; currency?: string })[]>,
-  )
-})
-
-const budgetLoading = computed(() => budgetStore.loading.value)
-
-const paletteCache = ref<CommandPaletteCatalogEntry[]>([])
-const paletteCacheMeta = ref<{ savedAt: number | null; lastSyncAt: number | null }>({
-  savedAt: null,
-  lastSyncAt: null,
-})
-let lastSavedPaletteSignature: string | null = null
-if (typeof window !== 'undefined') {
-  const payload = loadPaletteCacheFromStorage(PALETTE_CACHE_KEY)
-  if (payload && isCacheFresh(payload.savedAt, PALETTE_CACHE_TTL_MS)) {
-    paletteCache.value = payload.entries
-    paletteCacheMeta.value = { savedAt: payload.savedAt, lastSyncAt: payload.lastSyncAt ?? null }
-    lastSavedPaletteSignature = signatureForEntries(paletteCache.value)
-  } else if (payload) {
-    clearPaletteCacheStorage(PALETTE_CACHE_KEY)
-  }
-}
-
-const livePaletteCatalog = computed<CommandPaletteCatalogEntry[]>(() => {
-  const entries: CommandPaletteCatalogEntry[] = []
-  for (const note of store.notes.value) {
-    const snapshot: PaletteNoteSnapshot = {
-      id: note.id,
-      title: note.title || 'Sans titre',
-      summary: note.summary || '',
-      status: note.status || 'Brouillon',
-      tags: Array.isArray(note.tags) ? note.tags : [],
-      updatedAt: note.updatedAt,
-    }
-    entries.push({ type: 'note', payload: snapshot })
-  }
-  for (const transaction of budgetTransactionsDisplay.value.slice(0, 80)) {
-    const snapshot: PaletteTransactionSnapshot = {
-      id: transaction.id,
-      label: transaction.label,
-      accountName: transaction.accountName,
-      categoryName: transaction.categoryName,
-      amount: transaction.amount,
-      memo: transaction.memo,
-      date: transaction.date,
-      type: transaction.type,
-      accountCurrency: transaction.accountCurrency,
-    }
-    entries.push({ type: 'transaction', payload: snapshot })
-  }
-  for (const trip of budgetTripPlans.value) {
-    const snapshot: PaletteTripSnapshot = {
-      id: trip.id,
-      title: trip.title,
-      startDate: trip.startDate,
-      endDate: trip.endDate,
-      durationDays: trip.durationDays,
-      notes: trip.notes,
-      estimatedTotal: trip.estimatedTotal,
-      updatedAt: trip.updatedAt,
-    }
-    entries.push({ type: 'trip', payload: snapshot })
-  }
-  return entries
-})
-
-const paletteSource = computed(() => {
-  const hasLiveEntries = livePaletteCatalog.value.length > 0
-  const cacheFresh = isCacheFresh(paletteCacheMeta.value.savedAt, PALETTE_CACHE_TTL_MS)
-  const hasUsableCache = cacheFresh && paletteCache.value.length > 0
-  const shouldUseCache = (!hasLiveEntries && hasUsableCache) || (commandPaletteOffline.value && hasUsableCache)
-  if (shouldUseCache) {
-    return { entries: paletteCache.value, fromCache: true }
-  }
-  return { entries: livePaletteCatalog.value, fromCache: false }
-})
-
-const commandPaletteCatalog = computed<CommandPaletteCatalogEntry[]>(() => paletteSource.value.entries)
-const commandPaletteUsesCache = computed(() => paletteSource.value.fromCache)
-const paletteCacheLastSyncLabel = computed(() => {
-  if (!commandPaletteUsesCache.value) return null
-  const ts = paletteCacheMeta.value.lastSyncAt ?? paletteCacheMeta.value.savedAt
-  if (!ts) return null
-  return new Date(ts).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })
-})
-
-const commandPaletteSections = computed<CommandPaletteSection[]>(() =>
-  buildPaletteSections(commandPaletteCatalog.value, commandPaletteQuery.value, PALETTE_SECTION_LIMITS),
-)
-
-const commandPaletteEntryMap = computed(() => {
-  const map = new Map<string, CommandPaletteCatalogEntry>()
-  for (const entry of commandPaletteCatalog.value) {
-    map.set(paletteEntryId(entry), entry)
-  }
-  return map
-})
-
-function handleCommandPaletteOpen(prefill?: string) {
-  commandPaletteQuery.value = prefill ?? commandPaletteQuery.value
-  updateOfflineIndicator()
-  commandPaletteOpen.value = true
-}
-
-function handleCommandPaletteClose() {
-  commandPaletteOpen.value = false
-}
-
-async function handleCommandPaletteSelect(itemId: string) {
-  const entry = commandPaletteEntryMap.value.get(itemId)
-  if (!entry) {
-    handleCommandPaletteClose()
-    return
-  }
-
-  if (entry.type === 'note') {
-    await store.setActiveNote(entry.payload.id)
-    activeNav.value = 'Notes'
-    pushLog('info', `Note ouverte via palette : ${entry.payload.title || 'Sans titre'}`)
-  } else if (entry.type === 'transaction') {
-    activeNav.value = 'Budget'
-    showToast(`Transaction « ${entry.payload.label} »`, 'info')
-    pushLog('info', `Transaction consultée via palette : ${entry.payload.label}`)
-  } else if (entry.type === 'trip') {
-    activeNav.value = 'Budget'
-    handleOpenBudgetPlanner('vacation')
-    showToast(`Voyage « ${entry.payload.title} »`, 'info')
-    pushLog('info', `Voyage ouvert via palette : ${entry.payload.title}`)
-  }
-
-  handleCommandPaletteClose()
-}
-
-function handlePaletteShortcut(event: KeyboardEvent) {
-  if (!canUseWindow) return
-  const target = event.target as HTMLElement | null
-  if (isEditableTarget(target)) return
-  const key = event.key?.toLowerCase()
-  const wantsToggle = (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && key === 'k'
-  if (!wantsToggle) return
-  event.preventDefault()
-  if (commandPaletteOpen.value) {
-    handleCommandPaletteClose()
-  } else {
-    commandPaletteQuery.value = ''
-    handleCommandPaletteOpen()
-  }
-}
-
-function isEditableTarget(target: HTMLElement | null) {
-  if (!target) return false
-  const editableTags = ['INPUT', 'TEXTAREA', 'SELECT']
-  if (editableTags.includes(target.tagName)) return true
-  if (target.isContentEditable) return true
-  return false
-}
-
-function openBudgetPlanner(mode: PlannerMode) {
-  budgetPlannerMode.value = mode
-  budgetPlannerOpen.value = true
-}
-
-function closeBudgetPlanner() {
-  budgetPlannerOpen.value = false
-}
-
-watch(
-  () => workspaceMode.value,
-  (mode) => {
-    if (mode !== 'budget' && budgetPlannerOpen.value) {
-      closeBudgetPlanner()
-    }
-  },
-)
-
-watch(
-  () => ({ entries: livePaletteCatalog.value, offline: commandPaletteOffline.value }),
-  ({ entries, offline }) => {
-    if (!entries.length || offline) return
-    const truncated = truncatePaletteEntries(entries, PALETTE_CACHE_MAX_ENTRIES)
-    const signature = signatureForEntries(truncated)
-    if (signature === lastSavedPaletteSignature) return
-    lastSavedPaletteSignature = signature
-    paletteCache.value = truncated
-    paletteCacheMeta.value = { savedAt: Date.now(), lastSyncAt: lastSyncAt.value }
-    savePaletteCacheToStorage(PALETTE_CACHE_KEY, {
-      entries: truncated,
-      savedAt: paletteCacheMeta.value.savedAt!,
-      lastSyncAt: paletteCacheMeta.value.lastSyncAt,
-    })
-  },
-  { deep: true },
-)
-
-watch(
-  () => store.error.value,
-  (message) => {
-    if (message) {
-      showToast(message, 'error')
-      pushLog('error', message)
-    }
-  },
-)
-
-watch(
-  () => budgetStore.error.value,
-  (message) => {
-    if (message) {
-      showToast(message, 'error')
-      pushLog('error', message)
-    }
-  },
-)
-
-watch(
-  () => store.loading.value,
-  (isLoading) => {
-    if (!isLoading) {
-      lastSyncAt.value = Date.now()
-    }
-  },
-)
-
-const currentNoteId = computed(() => store.activeNote.value?.id ?? store.notes.value[0]?.id ?? null)
-
-const desktopNav = computed(() => baseNav.map((item) => ({ ...item, active: item.label === activeNav.value })))
-
-const boardStats = computed(() => {
-  const notes = store.notes.value
-  const noteCount = notes.length
-  const reviewCount = notes.filter((note) => note.status?.toLowerCase().includes('rev')).length
-  const blocks = notes.reduce((sum, note) => sum + (note.blocks?.length || 0), 0)
-  return [
-    { title: 'Notes actives', value: noteCount, detail: `+${Math.max(1, noteCount)} cette semaine` },
-    { title: 'Revues à faire', value: reviewCount, detail: `${Math.max(1, reviewCount)} urgentes` },
-    { title: 'Blocs créés', value: blocks, detail: `+${Math.max(1, blocks)} vs hier` },
-  ]
-})
-
-const workspaceNotes = computed(() => {
-  return store.notes.value.map((note) => ({
-    id: note.id,
-    title: note.title || 'Sans titre',
-    category: (note.tags?.[0] || 'Général').toUpperCase(),
-    excerpt: note.summary || 'Aucun résumé pour le moment.',
-    status: note.status || 'Brouillon',
-    updated: formatRelativeTime(note.updatedAt),
-  }))
-})
-
-const activeDesktopNote = computed(() => {
-  const note = store.activeNote.value || store.notes.value[0]
-  if (!note) {
-    return {
-      id: 'placeholder',
-      title: 'Aucune note active',
-      owner: 'Studio Produit',
-      status: 'Brouillon',
-      tags: ['Produit'],
-      summary: 'Créez votre première note pour remplir ce panneau.',
-      checklist: [],
-      highlights: ['Ajoutez des blocs pour enrichir la note.'],
-      blocks: [],
-    }
-  }
-  const normalizedBlocks: Block[] = (note.blocks || []).map((block, index) => ({
-    ...block,
-    id: block.id || `block-${index}`,
-  }))
-  return {
-    id: note.id,
-    title: note.title || 'Sans titre',
-    owner: note.status ? `Statut : ${note.status}` : 'Sans statut',
-    status: note.status || 'Brouillon',
-    tags: note.tags?.length ? note.tags : ['Produit'],
-    summary: note.summary || 'Aucun résumé',
-    checklist: (note.tasks || []).map((task, index) => ({ id: task.id || `task-${index}`, label: task.label, done: task.done })),
-    highlights: note.blocks?.length
-      ? note.blocks.map((block) => `Bloc ${block.type || 'texte'}`)
-      : ['Ajoutez des blocs pour enrichir la note.'],
-    blocks: normalizedBlocks,
-  }
-})
-
-const timeline = computed(() => {
-  const note = store.activeNote.value || store.notes.value[0]
-  if (!note) return []
-  const items = (note.tasks || []).map((task) => ({
-    time: task.done ? '✓' : '…',
-    event: task.label,
-  }))
-  if (!items.length) {
-    items.push({ time: '⏱', event: 'Aucune tâche pour le moment.' })
-  }
-  return items
-})
-
-async function handleSelectNote(id: string) {
-  await store.setActiveNote(id)
-  showAllNotes.value = false
-  const note = store.notes.value.find((item) => item.id === id)
-  pushLog('info', `Note ouverte : ${note?.title || 'Sans titre'}`)
-}
-
-function handleNavSelect(label: string) {
-  activeNav.value = label
-  if (label !== 'Budget' && budgetPlannerOpen.value) {
-    closeBudgetPlanner()
-  }
-  pushLog('info', `Section ${label} ouverte`)
-}
-
-function handleCreateNote() {
-  noteComposerOpen.value = true
-}
-
-function handleCloseNoteComposer() {
-  noteComposerOpen.value = false
-}
-
-async function handleComposerAction(mode: 'save' | 'publish', payload: NoteUpdatePayload) {
-  if (!payload.title?.trim()) {
-    showToast('Veuillez saisir un titre', 'error')
-    return
-  }
-  noteComposerSavingMode.value = mode
-  try {
-    await store.createNote(payload)
-    noteComposerOpen.value = false
-    noteComposerClearTrigger.value += 1
-    showAllNotes.value = false
-    showToast(mode === 'publish' ? 'Note publiée' : 'Note enregistrée', 'success')
-    pushLog('success', `Note ${mode === 'publish' ? 'publiée' : 'enregistrée'} : ${payload.title}`)
-    await openEditorModal()
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de créer la note'
-    showToast(message, 'error')
-    pushLog('error', message)
-  } finally {
-    noteComposerSavingMode.value = null
-  }
-}
-
-const handleComposerSave = (payload: NoteUpdatePayload) => handleComposerAction('save', payload)
-const handleComposerPublish = (payload: NoteUpdatePayload) => handleComposerAction('publish', payload)
-
-function handleViewAll() {
-  showAllNotes.value = true
-  pushLog('info', 'Vue “Toutes les notes” ouverte')
-}
-
-async function openEditorModal(noteId?: string) {
-  const targetId = noteId || currentNoteId.value
-  if (!targetId) return
-  if (noteId && noteId !== currentNoteId.value) {
-    await store.setActiveNote(noteId)
-  }
-  showEditorModal.value = true
-}
-
-function closeEditorModal() {
-  showEditorModal.value = false
-}
-
-function handleModalSave() {
-  if (!currentNoteId.value) return
-  closeEditorModal()
-  showToast('Note sauvegardée', 'success')
-  pushLog('success', 'Note sauvegardée via modale')
-}
-
-async function handleUpdateActiveNote(payload: {
-  status: string
-  summary: string
-  tasks: { id?: string; label: string; done: boolean }[]
-  blocks: Block[]
-  tags: string[]
-}) {
-  const noteId = currentNoteId.value
-  if (!noteId) return
-  const normalized = normalizeSyncPayload({
-    status: payload.status,
-    summary: payload.summary,
-    tasks: payload.tasks.map((task, index) => ({ id: task.id || `task-${index}`, label: task.label, done: !!task.done })),
-    blocks: payload.blocks.map((block, index) => ({ ...block, id: block.id || `block-${index}`, data: { ...block.data } })),
-    tags: payload.tags,
-  })
-  const serialized = serializeSyncPayload(normalized)
-  if (lastSyncedPayload.get(noteId) === serialized) return
-  lastSyncedPayload.set(noteId, serialized)
-  try {
-    await store.updateNote(noteId, normalized)
-  } catch (err) {
-    console.error('Failed to sync note', err)
-    showToast("Échec de la synchronisation de la note", 'error')
-    pushLog('error', 'Synchronisation de note impossible')
-  }
-}
-
-async function handleDuplicate(noteId: string) {
-  await store.duplicateNote(noteId)
-  showToast('Note dupliquée', 'info')
-  pushLog('success', 'Note dupliquée')
-}
-
-async function handleDuplicateActiveNote() {
-  const noteId = currentNoteId.value
-  if (!noteId) return
-  await store.duplicateNote(noteId)
-  showToast('Note dupliquée', 'info')
-  pushLog('success', 'Note dupliquée')
-  openEditorModal()
-}
-
-async function handleDelete(noteId: string) {
-  try {
-    await store.deleteNote(noteId)
-    showToast('Note supprimée', 'success')
-    pushLog('success', 'Note supprimée')
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de supprimer la note'
-    showToast(message, 'error')
-    pushLog('error', message)
-    throw err
-  }
-}
-
-async function handleDeleteActiveNote(noteId?: string) {
-  const targetId = noteId || currentNoteId.value
-  if (!targetId) return
-  await handleDelete(targetId)
-  if (showEditorModal.value) {
-    closeEditorModal()
-  }
-}
-
-function promptDeleteNote(noteId?: string) {
-  const targetId = noteId || currentNoteId.value
-  if (!targetId) return
-  pendingDeleteId.value = targetId
-}
-
-function cancelPendingDelete() {
-  pendingDeleteId.value = null
-}
-
-async function confirmPendingDelete() {
-  if (!pendingDeleteId.value) return
-  await handleDeleteActiveNote(pendingDeleteId.value)
-  pendingDeleteId.value = null
-}
-
-async function handleShare() {
-  const note = store.activeNote.value
-  if (!note) {
-    showToast('Aucune note active à partager', 'info')
-    pushLog('info', 'Tentative de partage sans note active')
-    return
-  }
-
-  const content = `# ${note.title || 'Sans titre'}\n\n${note.summary || 'Résumé en attente.'}\n\n---\nStatut : ${note.status || 'Brouillon'}\nDernière mise à jour : ${new Date(note.updatedAt).toLocaleString()}\n\n## Checklist\n${
-    (note.tasks || []).length ? note.tasks.map((task) => `- [${task.done ? 'x' : ' '}] ${task.label}`).join('\n') : '- Aucune tâche'
-  }`
-
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: note.title || 'Note',
-        text: content,
-      })
-      showToast('Note partagée via Web Share', 'success')
-      pushLog('success', 'Note partagée via Web Share')
-      return
-    } catch {
-      // fallback below
-    }
-  }
-
-  if (navigator.clipboard) {
-    try {
-      await navigator.clipboard.writeText(content)
-      showToast('Contenu copié dans le presse-papiers', 'success')
-      pushLog('success', 'Note copiée dans le presse-papiers')
-      return
-    } catch {
-      // fallback to download
-    }
-  }
-
-  downloadTextFile(content, `${note.title || 'note'}.md`)
-  showToast('Fichier markdown téléchargé', 'info')
-  pushLog('info', 'Export markdown téléchargé')
-}
-
-async function handleCreateNoteFromEvent(title: string, eventId: string) {
-  try {
-    const notePayload = {
-      title: `Événement: ${title}`,
-      summary: `Note créée automatiquement pour l'événement "${title}"`,
-      status: 'Brouillon',
-      tags: ['Calendrier'],
-    }
-    await store.createNote(notePayload)
-    showToast('Note créée depuis le calendrier', 'success')
-    pushLog('success', `Note créée pour l'événement: ${title}`)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de créer la note'
-    showToast(message, 'error')
-  }
-}
-
-async function handleCreateBudgetTransactionFromEvent(payload: {
-  eventId: string
-  amount: number
-  type: 'expense' | 'income'
-  accountId: string
-  categoryId: string
-  label: string
-  date: Date
-}) {
-  try {
-    await budgetStore.recordTransaction({
-      accountId: payload.accountId,
-      categoryId: payload.categoryId,
-      amount: payload.amount,
-      type: payload.type,
-      date: payload.date.toISOString(),
-      label: payload.label,
-      memo: `Transaction créée depuis l'événement calendrier`,
-      noteId: null,
-    })
-    showToast('Transaction créée depuis le calendrier', 'success')
-    pushLog('success', 'Transaction liée à un événement calendrier')
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Impossible de créer la transaction'
-    showToast(message, 'error')
-  }
-}
-
-function downloadTextFile(text: string, filename: string) {
-  const blob = new Blob([text], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}
-
-function formatRelativeTime(timestamp?: number) {
-  if (!timestamp) return '—'
-  const diff = Date.now() - timestamp
-  const minutes = Math.round(diff / 60000)
-  if (minutes < 60) return `il y a ${minutes} min`
-  const hours = Math.round(minutes / 60)
-  if (hours < 24) return `il y a ${hours} h`
-  const days = Math.round(hours / 24)
-  return `il y a ${days} j`
-}
-
-function formatLogTimestamp(timestamp: number) {
-  return new Date(timestamp).toLocaleString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
-
-function normalizeSyncPayload(payload: {
-  status?: string
-  summary?: string
-  tasks?: Task[]
-  blocks?: { id?: string; type?: string; data?: Record<string, unknown> }[]
-  tags?: string[]
-}) {
-  return {
-    status: payload.status ?? store.activeNote.value?.status ?? 'Brouillon',
-    summary: payload.summary ?? '',
-    tasks: (payload.tasks || []).map((task, index) => ({
-      id: task.id || `task-${index}`,
-      label: task.label ?? '',
-      done: !!task.done,
-    })),
-    blocks: (payload.blocks || []).map((block, index) => ({
-      id: block.id || `block-${index}`,
-      type: block.type || 'text',
-      data: normalizeBlockData(block.data),
-    })),
-    tags: Array.isArray(payload.tags)
-      ? payload.tags
-      : store.activeNote.value?.tags?.length
-        ? store.activeNote.value.tags
-        : ['Général'],
-  }
-}
-
-function normalizeBlockData(data?: Record<string, unknown>) {
-  if (!data) return {}
-  try {
-    return JSON.parse(JSON.stringify(data))
-  } catch {
-    return {}
-  }
-}
-
-function serializeSyncPayload(payload: {
-  status: string
-  summary: string
-  tasks: Task[]
-  blocks: { id?: string; type: string; data: Record<string, unknown> }[]
-  tags: string[]
-}) {
-  return JSON.stringify(payload)
-}
-
- </script>
+</script>
 
 <template>
   <div class="min-h-screen text-[var(--text-main)] transition-colors duration-300">
-    <div class="mx-auto max-w-[1200px] py-10 px-6">
-      <DesktopWorkspace
-        :nav-items="desktopNav"
-        :stats="boardStats"
-        :notes="workspaceNotes"
-        :active-note="activeDesktopNote"
-        :timeline="timeline"
-        :mode="workspaceMode"
-        :quick-flow="quickFlow"
-        :shortcut-hints="shortcutHints"
-        :budget-summary="budgetSummary"
-        :budget-accounts="budgetStore.accounts.value"
-        :budget-transactions="budgetTransactionsDisplay"
-        :budget-alerts="budgetStore.alerts.value"
-        :budget-categories="budgetCategoryBreakdown"
-        :budget-category-options="budgetStore.categories.value"
-        :budget-notes="budgetNotes"
-        :budget-note-transactions="budgetNoteTransactions"
-        :budget-loading="budgetLoading"
-        :budget-trip-plans="budgetTripPlans"
-        :budget-bank-profiles="budgetBankProfiles"
-        :budget-planner-open="budgetPlannerOpen"
-        :budget-planner-mode="budgetPlannerMode"
-        @create-note="handleCreateNote"
-        @share="handleShare"
-        @view-all="handleViewAll"
-        @select-note="handleSelectNote"
-        @update-active-note="handleUpdateActiveNote"
-        @edit-note="openEditorModal"
-        @delete-note="promptDeleteNote"
-        @select-nav="handleNavSelect"
-        @create-budget-account="handleCreateBudgetAccount"
-        @update-budget-account="handleUpdateBudgetAccount"
-        @delete-budget-account="handleDeleteBudgetAccount"
-        @create-budget-transaction="handleCreateBudgetTransaction"
-        @update-budget-transaction="handleUpdateBudgetTransaction"
-        @delete-budget-transaction="handleDeleteBudgetTransaction"
-        @link-budget-transaction-note="handleLinkBudgetTransactionNote"
-        @save-budget-trip="handleSaveBudgetTripPlan"
-        @delete-budget-trip="handleDeleteBudgetTripPlan"
-        @create-bank-profile="handleCreateBankProfile"
-        @update-bank-profile="handleUpdateBankProfile"
-        @delete-bank-profile="handleDeleteBankProfile"
-        @open-budget-planner="handleOpenBudgetPlanner"
-        @close-budget-planner="handleCloseBudgetPlanner"
-        @refresh-budget="handleRefreshBudget"
-        @open-command-palette="() => handleCommandPaletteOpen()"
-        @create-note-from-event="handleCreateNoteFromEvent"
-        @create-budget-transaction-from-event="handleCreateBudgetTransactionFromEvent"
-      />
+    <div class="mx-auto flex flex-col lg:flex-row min-h-screen max-w-7xl gap-6 lg:gap-10 px-4 sm:px-6 lg:px-10 py-6 lg:py-10">
+      <!-- Mobile Header -->
+      <div class="lg:hidden flex items-center justify-between mb-2">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+            <span class="text-xl">📁</span>
+          </div>
+          <h2 class="font-display font-semibold text-[var(--text-main)]">Le Bocal</h2>
+        </div>
+        <button
+          class="h-10 w-10 rounded-xl bg-[var(--surface-card)] flex items-center justify-center shadow-md ring-1 ring-black/5 dark:ring-white/10"
+          @click="sidebarOpen = !sidebarOpen"
+        >
+          <span>{{ sidebarOpen ? '✕' : '☰' }}</span>
+        </button>
+      </div>
+
+      <!-- Sidebar -->
+      <aside
+        class="sticky top-6 lg:top-10 self-start flex w-full lg:w-60 flex-col items-center gap-4 lg:gap-6 rounded-[32px] lg:rounded-[40px] p-5 lg:p-6 animate-fade-in shadow-xl dark:bg-[var(--surface)] transition-all duration-300 overflow-hidden z-50"
+        :class="[sidebarOpen ? 'max-h-[1000px] opacity-100 bg-[var(--surface-card)]' : 'max-h-0 lg:max-h-none opacity-0 lg:opacity-100 hidden lg:flex glass-card']"
+      >
+        <div class="text-center">
+          <p class="text-xs uppercase tracking-[0.35em] text-[var(--text-muted)]">Le Bocal</p>
+          <p class="text-sm text-[var(--text-muted)] opacity-80">Workspace</p>
+        </div>
+        <div class="h-16 w-16 rounded-2xl border-2 border-white shadow-lg overflow-hidden bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center">
+          <img 
+            v-if="sidebarAvatarUrl" 
+            :src="sidebarAvatarUrl" 
+            class="h-full w-full object-cover" 
+            alt="avatar" 
+          />
+          <span v-else class="text-white font-semibold text-2xl">{{ sidebarInitial }}</span>
+        </div>
+        <nav class="flex w-full flex-col gap-4">
+          <router-link
+            v-for="item in navItems"
+            :key="item.label"
+            :to="item.to"
+            class="tap-effect flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition-all"
+            :class="item.active ? 'bg-sage text-anthracite shadow-md scale-105 font-semibold' : 'text-gray-500 dark:text-slate-400 hover:bg-white/70 dark:hover:bg-white/5'"
+            @click="sidebarOpen = false"
+          >
+            <span>{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </router-link>
+        </nav>
+        <button class="tap-effect mt-2 flex h-14 w-14 items-center justify-center rounded-[20px] bg-clay text-mist shadow-xl shadow-clay/20 hover:scale-105 transition-transform" @click="shell.handleCreateNote">
+          <span class="text-2xl font-bold">+</span>
+        </button>
+
+        <div class="w-full rounded-2xl bg-[var(--surface-card)] dark:bg-[var(--glass-bg)] p-4 text-sm text-[var(--text-main)] shadow-sm ring-1 ring-black/5 dark:ring-white/5">
+          <p class="text-[10px] uppercase tracking-[0.3em] text-[var(--text-muted)] font-bold">Flux rapide</p>
+          <ul class="mt-3 space-y-2 text-xs">
+            <li>{{ quickFlow.reviewCount }} notes en revue</li>
+            <li>{{ quickFlow.pendingBlocks }} blocs en cours</li>
+            <li>Sync {{ quickFlow.lastSyncLabel }}</li>
+          </ul>
+        </div>
+
+        <button
+          class="tap-effect flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition-all text-gray-500 dark:text-slate-400 hover:bg-white/70 dark:hover:bg-white/5"
+          :title="isDark ? 'Passer au mode jour' : 'Passer au mode nuit'"
+          @click="toggleTheme"
+        >
+          <span class="text-lg">{{ isDark ? '☀️' : '🌙' }}</span>
+          <span>{{ isDark ? 'Mode jour' : 'Mode nuit' }}</span>
+        </button>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1">
+        <router-view />
+
+
+      </main>
     </div>
 
+    <!-- Loading Overlay -->
     <transition name="fade">
-      <div v-if="!initialSyncCompleted" class="fixed inset-0 z-[60] flex items-center justify-center bg-[#f6eede]/80 backdrop-blur-xl">
+      <div v-if="!shell.initialSyncCompleted.value" class="fixed inset-0 z-[60] flex items-center justify-center bg-[#f6eede]/80 backdrop-blur-xl">
         <div class="flex items-center gap-4 rounded-3xl bg-white p-8 text-base font-medium text-anthracite shadow-2xl border border-black/5">
           <span class="h-5 w-5 animate-spin rounded-full border-2 border-sage border-t-transparent"></span>
           Initialisation du Bocal…
@@ -1158,135 +155,42 @@ function serializeSyncPayload(payload: {
       </div>
     </transition>
 
-    <transition name="fade">
-      <div
-        v-if="showEditorModal"
-        class="fixed inset-0 z-[65] flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-10"
-      >
-        <div class="relative w-full max-w-5xl rounded-[48px] bg-[#faf9f6] p-12 shadow-2xl border border-black/5" style="max-height: 92vh; overflow-y: auto;">
-          <div class="flex items-center justify-between mb-8">
-            <div>
-              <h2 class="font-display text-3xl text-anthracite tracking-tight">Édition de la note</h2>
-              <p class="text-sm text-clay mt-1">Vos modifications sont sauvegardées instantanément.</p>
-            </div>
-            <button class="h-10 w-10 flex items-center justify-center rounded-full bg-black/5 text-anthracite hover:bg-black/10 transition-colors" @click="closeEditorModal">✕</button>
-          </div>
-          <div class="mt-6 space-y-4">
-            <ActiveNotePanel
-              v-if="store.activeNote.value"
-              :note="activeDesktopNote"
-              :timeline="timeline"
-              :editable-tags="true"
-              :show-actions="false"
-              :budget-transactions="budgetNoteTransactions?.[activeDesktopNote.id] || []"
-              @update-note="handleUpdateActiveNote"
-            />
-            <div class="flex flex-wrap justify-end gap-2">
-              <button
-                class="rounded-2xl border border-white/70 bg-white/80 px-5 py-2 text-sm text-gray-600"
-                @click="handleDuplicateActiveNote"
-              >
-                Dupliquer
-              </button>
-              <button
-                class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-2 text-sm text-rose-600"
-                @click="promptDeleteNote()"
-              >
-                Supprimer
-              </button>
-              <button class="rounded-2xl bg-sage px-5 py-2 text-sm font-medium text-white" @click="handleModalSave">
-                Sauvegarder
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <transition name="fade">
-      <div
-        v-if="initialSyncCompleted && isBackgroundSyncing"
-        class="fixed right-6 bottom-6 z-[55] flex items-center gap-3 rounded-full bg-white/90 px-4 py-2 text-sm text-gray-600 shadow-xl"
-      >
-        <span class="h-3 w-3 animate-spin rounded-full border border-sage border-t-transparent"></span>
-        Synchronisation des notes…
-      </div>
-    </transition>
-
+    <!-- Note Composer Modal (global) -->
     <NoteComposerModal
-      :open="noteComposerOpen"
-      :collections="store.collections.value"
-      :saving-mode="noteComposerSavingMode"
-      :clear-trigger="noteComposerClearTrigger"
-      @close="handleCloseNoteComposer"
-      @save="handleComposerSave"
-      @publish="handleComposerPublish"
-      @create-collection="handleComposerCreateCollection"
+      :open="shell.noteComposerOpen.value"
+      :saving="shell.noteComposerSavingMode.value !== null"
+      :clear-trigger="shell.noteComposerClearTrigger.value"
+      @close="shell.handleCloseNoteComposer"
+      @save="shell.handleComposerSave"
+      @publish="shell.handleComposerPublish"
+      @create-collection="shell.handleComposerCreateCollection"
     />
 
-    <transition name="fade">
-      <div
-        v-if="pendingDeleteId"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md px-4"
-      >
-        <div class="w-full max-w-md rounded-[40px] bg-[#faf9f6] p-10 text-center shadow-2xl border border-black/5 scale-100 animate-in fade-in zoom-in duration-300">
-          <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-          </div>
-          <h3 class="font-display text-3xl text-anthracite tracking-tight">Supprimer la note ?</h3>
-          <p class="mt-4 text-base text-clay leading-relaxed">Cette action est définitive. La note sera retirée de votre base de connaissances.</p>
-          <div class="mt-10 flex flex-col gap-3">
-            <button class="w-full rounded-2xl bg-[#c98e8e] py-4 text-sm font-bold text-white shadow-lg shadow-rose-900/10 hover:brightness-95 transition-all" @click="confirmPendingDelete">Oui, supprimer définitivement</button>
-            <button class="w-full rounded-2xl bg-white border border-black/5 py-4 text-sm font-bold text-anthracite hover:bg-black/5 transition-all" @click="cancelPendingDelete">Annuler</button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <transition name="fade">
-      <div
-        v-if="showAllNotes"
-        class="fixed inset-0 z-40 flex items-start justify-center bg-black/40 px-4 py-10"
-      >
-        <div class="relative w-full max-w-3xl rounded-[32px] bg-[var(--surface-card)] p-6 shadow-xl ring-1 ring-black/5 dark:ring-white/10">
-          <div class="flex items-center justify-between">
-            <h2 class="font-display text-2xl text-[var(--text-main)]">Toutes les notes</h2>
-            <button class="text-sm text-gray-500" @click="showAllNotes = false">Fermer ✕</button>
-          </div>
-          <div class="mt-6 max-h-[70vh] space-y-3 overflow-y-auto pr-2">
-            <NotesList
-              :notes="workspaceNotes"
-              :active-id="currentNoteId"
-              @select="handleSelectNote"
-            />
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <TransitionGroup name="toast" tag="div" class="fixed right-6 top-6 z-[70] space-y-3">
-      <div
-        v-for="toast in toasts"
-        :key="toast.id"
-        :class="[
-          'flex items-center justify-between gap-4 rounded-2xl px-5 py-3 text-sm shadow-lg ring-1 ring-black/10',
-          toastVariants[toast.type] || toastVariants.info,
-        ]"
-      >
-        <span>{{ toast.message }}</span>
-        <button class="text-xs text-white/80" @click="dismissToast(toast.id)">Fermer</button>
-      </div>
-    </TransitionGroup>
-
+    <!-- Command Palette (global) -->
     <CommandPalette
-      v-model:query="commandPaletteQuery"
-      :open="commandPaletteOpen"
-      :sections="commandPaletteSections"
-      :is-offline="commandPaletteOffline"
-      :uses-cache="commandPaletteUsesCache"
-      :cache-label="paletteCacheLastSyncLabel"
-      @select="handleCommandPaletteSelect"
-      @close="handleCommandPaletteClose"
+      :open="shell.commandPaletteOpen.value"
+      :query="shell.commandPaletteQuery.value"
+      :sections="shell.commandPaletteSections.value"
+      :uses-cache="shell.commandPaletteUsesCache.value"
+      :cache-last-sync="shell.paletteCacheLastSyncLabel.value"
+      @close="shell.handleCommandPaletteClose"
+      @update:query="shell.commandPaletteQuery.value = $event"
+      @select="shell.handleCommandPaletteSelect"
     />
+
+    <!-- Toasts (global) -->
+    <div class="fixed bottom-6 right-6 z-[80] flex flex-col gap-2">
+      <transition-group name="fade">
+        <div
+          v-for="toast in shell.toasts.value"
+          :key="toast.id"
+          :class="toastVariants[toast.type] || toastVariants.info"
+          class="rounded-xl px-5 py-3 text-sm font-medium shadow-xl backdrop-blur-sm cursor-pointer"
+          @click="shell.dismissToast(toast.id)"
+        >
+          {{ toast.message }}
+        </div>
+      </transition-group>
+    </div>
   </div>
 </template>

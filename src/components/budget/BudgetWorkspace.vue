@@ -620,40 +620,40 @@ function switchPlannerMode(mode: PlannerMode) {
 
 <template>
   <div class="space-y-6">
-    <div class="rounded-[32px] bg-mist p-6">
+    <div class="rounded-[32px] bg-[var(--color-bg-muted)] dark:bg-[var(--glass-bg)] p-6 border border-[var(--color-border)]">
       <div class="flex flex-wrap items-center gap-6">
         <div>
-          <p class="text-xs uppercase tracking-[0.3em] text-gray-500">Vue Budget</p>
-          <h2 class="font-display text-3xl text-ink">Pilotage des comptes</h2>
-          <p class="text-sm text-gray-500">Soldes consolidés, transactions récentes et objectifs par typologie.</p>
+          <p class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Vue Budget</p>
+          <h2 class="font-display text-3xl text-[var(--color-text-primary)]">Pilotage des comptes</h2>
+          <p class="text-sm text-[var(--color-text-secondary)]">Soldes consolidés, transactions récentes et objectifs par typologie.</p>
         </div>
         <div class="ml-auto grid gap-4 sm:grid-cols-2">
-          <div class="rounded-3xl bg-white/90 p-4 shadow-card">
-            <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Solde total</p>
+          <div class="rounded-3xl bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] p-4 shadow-card border border-[var(--color-border)]">
+            <p class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Solde total</p>
             <p class="mt-2 font-display text-2xl text-emerald-600">
               {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(summary.totalBalance) }}
             </p>
-            <p class="text-xs text-gray-500">{{ summary.accountCount }} comptes suivis</p>
+            <p class="text-xs text-[var(--color-text-secondary)]">{{ summary.accountCount }} comptes suivis</p>
           </div>
-          <div class="rounded-3xl bg-white/90 p-4 shadow-card">
-            <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Progression</p>
+          <div class="rounded-3xl bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] p-4 shadow-card border border-[var(--color-border)]">
+            <p class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Progression</p>
             <div class="mt-2">
               <div v-if="summary.targets" class="space-y-2">
-                <p class="text-sm font-medium text-ink">{{ summary.targets.label }}</p>
-                <div class="h-2 rounded-full bg-gray-200">
-                  <div class="h-full rounded-full bg-sage" :style="{ width: `${Math.min(100, summary.targets.progress)}%` }"></div>
+                <p class="text-sm font-medium text-[var(--color-text-primary)]">{{ summary.targets.label }}</p>
+                <div class="h-2 rounded-full bg-[var(--color-border)]">
+                  <div class="h-full rounded-full bg-[var(--color-accent)]" :style="{ width: `${Math.min(100, summary.targets.progress)}%` }"></div>
                 </div>
-                <p class="text-xs text-gray-500">{{ summary.targets.progress.toFixed(0) }}% – reste {{ summary.targets.remaining }}€</p>
+                <p class="text-xs text-[var(--color-text-secondary)]">{{ summary.targets.progress.toFixed(0) }}% – reste {{ summary.targets.remaining }}€</p>
               </div>
-              <p v-else class="text-xs text-gray-500">Définissez un objectif pour suivre vos budgets thématiques.</p>
+              <p v-else class="text-xs text-[var(--color-text-secondary)]">Définissez un objectif pour suivre vos budgets thématiques.</p>
             </div>
           </div>
         </div>
         <div class="flex flex-wrap gap-3">
-          <button class="rounded-full bg-white/80 px-5 py-2 text-sm text-sage shadow-card" :disabled="loading" @click="emit('refresh')">
+          <button class="rounded-full bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-5 py-2 text-sm text-[var(--color-accent)] shadow-card border border-[var(--color-border)]" :disabled="loading" @click="emit('refresh')">
             Actualiser
           </button>
-          <button class="flex items-center gap-2 rounded-full bg-sage px-5 py-2 text-sm text-anthracite shadow-card" @click="startTripPlanning()">
+          <button class="flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-5 py-2 text-sm text-white shadow-card" @click="startTripPlanning()">
             <span>Planifier un budget</span>
             <span class="rounded-full bg-white/20 px-2 py-0.5 text-[11px]">⌘⇧N</span>
           </button>
@@ -664,10 +664,10 @@ function switchPlannerMode(mode: PlannerMode) {
       </div>
     </div>
 
-    <div v-if="alerts.length" class="grid gap-3 rounded-[28px] bg-white/90 p-5 shadow-card">
+    <div v-if="alerts.length" class="grid gap-3 rounded-[28px] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] p-5 shadow-card border border-[var(--color-border)]">
       <div class="flex items-center justify-between">
-        <h3 class="font-display text-xl text-ink">Alertes</h3>
-        <span class="rounded-full bg-rose-50 px-3 py-1 text-xs text-rose-600">{{ alerts.length }} active(s)</span>
+        <h3 class="font-display text-xl text-[var(--color-text-primary)]">Alertes</h3>
+        <span class="rounded-full bg-rose-100 dark:bg-rose-900/30 px-3 py-1 text-xs text-rose-600">{{ alerts.length }} active(s)</span>
       </div>
       <ul class="space-y-2">
         <li
@@ -675,7 +675,7 @@ function switchPlannerMode(mode: PlannerMode) {
           :key="alert.id"
           :class="[
             'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm',
-            alert.severity === 'danger' ? 'bg-rose-50 text-rose-700' : alert.severity === 'warning' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
+            alert.severity === 'danger' ? 'bg-rose-100 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300' : alert.severity === 'warning' ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300' : 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
           ]"
         >
           <span v-if="alert.severity === 'danger'">⚠️</span>
@@ -687,21 +687,21 @@ function switchPlannerMode(mode: PlannerMode) {
     </div>
 
     <div class="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
-      <section class="space-y-4 rounded-[28px] bg-white/95 p-5 shadow-card">
+      <section class="space-y-4 rounded-[28px] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] p-5 shadow-card border border-[var(--color-border)]">
         <div class="flex flex-wrap items-center gap-3">
           <div>
-            <h3 class="font-display text-xl text-ink">Comptes</h3>
-            <p class="text-xs uppercase tracking-[0.3em] text-gray-400">{{ accounts.length }} suivi(s)</p>
+            <h3 class="font-display text-xl text-[var(--color-text-primary)]">Comptes</h3>
+            <p class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">{{ accounts.length }} suivi(s)</p>
           </div>
           <button
-            class="ml-auto rounded-full border border-sage/50 px-4 py-1.5 text-sm text-sage hover:bg-sage/5"
+            class="ml-auto rounded-full border border-[var(--color-accent)]/50 px-4 py-1.5 text-sm text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
             @click="showAccountForm = !showAccountForm"
           >
             {{ showAccountForm ? 'Fermer le formulaire' : 'Ajouter un compte' }}
           </button>
         </div>
-        <form v-if="showAccountForm" class="space-y-3 rounded-2xl bg-mist/50 p-4" @submit.prevent="submitAccount">
-          <div class="flex items-center justify-between text-xs text-gray-500">
+        <form v-if="showAccountForm" class="space-y-3 rounded-2xl bg-[var(--color-bg-muted)] dark:bg-[var(--glass-bg)] p-4 border border-[var(--color-border)]" @submit.prevent="submitAccount">
+          <div class="flex items-center justify-between text-xs text-[var(--color-text-secondary)]">
             <span class="uppercase tracking-[0.3em]">{{ editingAccountId ? 'Modifier le compte' : 'Nouveau compte' }}</span>
             <button v-if="editingAccountId" type="button" class="text-rose-600 hover:underline" @click="cancelAccountEdit">Annuler</button>
           </div>
@@ -710,9 +710,9 @@ function switchPlannerMode(mode: PlannerMode) {
               v-model="accountForm.name"
               type="text"
               placeholder="Nom du compte"
-              class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm text-gray-700"
+              class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
-            <select v-model="accountForm.type" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm text-gray-700">
+            <select v-model="accountForm.type" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
               <option value="bank">Banque</option>
               <option value="vacation">Vacances</option>
               <option value="savings">Épargne</option>
@@ -720,15 +720,15 @@ function switchPlannerMode(mode: PlannerMode) {
             </select>
           </div>
           <div class="grid gap-2 md:grid-cols-3">
-            <input v-model="accountForm.currency" type="text" placeholder="Devise" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm" />
-            <input v-model="accountForm.target" type="number" min="0" step="100" placeholder="Objectif" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm" />
+            <input v-model="accountForm.currency" type="text" placeholder="Devise" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+            <input v-model="accountForm.target" type="number" min="0" step="100" placeholder="Objectif" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
             <input
               v-model="accountForm.alertThreshold"
               type="number"
               min="0"
               step="50"
               placeholder="Seuil alerte"
-              class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm"
+              class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             />
           </div>
           <button class="w-full rounded-full bg-emerald-500 py-2 text-sm font-medium text-white" type="submit">
@@ -739,31 +739,31 @@ function switchPlannerMode(mode: PlannerMode) {
           <article
             v-for="account in accounts"
             :key="account.id"
-            class="rounded-3xl border border-white/80 bg-mist/60 p-4"
+            class="rounded-3xl border border-[var(--color-border)] bg-[var(--color-bg-muted)] dark:bg-[var(--glass-bg)] p-4"
           >
             <div class="flex items-center justify-between">
               <div class="text-2xl">{{ account.icon || '💳' }}</div>
-              <span class="rounded-full bg-white/70 px-3 py-1 text-xs text-gray-500">{{ account.type }}</span>
+              <span class="rounded-full bg-[var(--color-bg-surface)] dark:bg-[var(--color-border)] px-3 py-1 text-xs text-[var(--color-text-secondary)]">{{ account.type }}</span>
             </div>
-            <h4 class="mt-3 font-display text-lg text-ink">{{ account.name }}</h4>
-            <p class="text-sm text-gray-500">{{ account.description || 'Solde actuel' }}</p>
+            <h4 class="mt-3 font-display text-lg text-[var(--color-text-primary)]">{{ account.name }}</h4>
+            <p class="text-sm text-[var(--color-text-secondary)]">{{ account.description || 'Solde actuel' }}</p>
             <p class="mt-3 text-2xl font-semibold text-emerald-600">
               {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: account.currency }).format(account.balance) }}
             </p>
             <div v-if="account.target" class="mt-2">
-              <div class="flex items-center justify-between text-xs text-gray-500">
+              <div class="flex items-center justify-between text-xs text-[var(--color-text-secondary)]">
                 <span>Objectif</span>
                 <span>{{ Math.round((account.balance / account.target) * 100) }}%</span>
               </div>
-              <div class="mt-1 h-2 rounded-full bg-white/60">
-                <div class="h-full rounded-full bg-sage" :style="{ width: `${Math.min(100, (account.balance / account.target) * 100)}%` }"></div>
+              <div class="mt-1 h-2 rounded-full bg-[var(--color-border)]">
+                <div class="h-full rounded-full bg-[var(--color-accent)]" :style="{ width: `${Math.min(100, (account.balance / account.target) * 100)}%` }"></div>
               </div>
             </div>
             <div class="mt-3 flex gap-2 text-xs">
-              <button class="rounded-full border border-white/70 px-3 py-1 text-gray-600 hover:text-sage" @click="startEditAccount(account)">
+              <button class="rounded-full border border-[var(--color-border)] px-3 py-1 text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]" @click="startEditAccount(account)">
                 Éditer
               </button>
-              <button class="rounded-full border border-rose-200 px-3 py-1 text-rose-600 hover:bg-rose-50" @click="requestDeleteAccount(account.id)">
+              <button class="rounded-full border border-rose-200 dark:border-rose-800 px-3 py-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30" @click="requestDeleteAccount(account.id)">
                 Supprimer
               </button>
             </div>
@@ -771,21 +771,21 @@ function switchPlannerMode(mode: PlannerMode) {
         </div>
       </section>
 
-      <section class="space-y-4 rounded-[28px] bg-white/95 p-5 shadow-card">
-        <h3 class="font-display text-xl text-ink">Catégories clés</h3>
+      <section class="space-y-4 rounded-[28px] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] p-5 shadow-card border border-[var(--color-border)]">
+        <h3 class="font-display text-xl text-[var(--color-text-primary)]">Catégories clés</h3>
         <ul class="space-y-3">
           <li v-for="category in categories" :key="category.id">
-            <div class="flex items-center justify-between text-sm text-gray-600">
+            <div class="flex items-center justify-between text-sm text-[var(--color-text-secondary)]">
               <div class="flex items-center gap-2">
                 <span class="text-lg">{{ category.icon || '•' }}</span>
                 <span>{{ category.name }}</span>
               </div>
-              <span class="font-medium text-ink">
+              <span class="font-medium text-[var(--color-text-primary)]">
                 {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(category.total) }}
               </span>
             </div>
-            <div class="mt-1 h-2 rounded-full bg-gray-100">
-              <div class="h-full rounded-full bg-emerald-500" :style="{ width: `${Math.min(100, (category.total / summary.totalBalance) * 100 || 0)}%` }"></div>
+            <div class="mt-1 h-2 rounded-full bg-[var(--color-border)]">
+              <div class="h-full rounded-full bg-[var(--color-accent)]" :style="{ width: `${Math.min(100, (category.total / summary.totalBalance) * 100 || 0)}%` }"></div>
             </div>
           </li>
         </ul>
@@ -793,59 +793,59 @@ function switchPlannerMode(mode: PlannerMode) {
     </div>
 
     <div class="space-y-6">
-      <section class="space-y-4 rounded-[28px] bg-white/95 p-5 shadow-card">
+      <section class="space-y-4 rounded-[28px] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] p-5 shadow-card border border-[var(--color-border)]">
         <div class="flex flex-wrap items-center gap-3">
           <div class="flex items-center gap-3">
-            <h3 class="font-display text-xl text-ink">Transactions</h3>
-            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs uppercase tracking-[0.3em] text-gray-500">{{ transactions.length }} récente(s)</span>
+            <h3 class="font-display text-xl text-[var(--color-text-primary)]">Transactions</h3>
+            <span class="rounded-full bg-[var(--color-bg-muted)] px-3 py-1 text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">{{ transactions.length }} récente(s)</span>
           </div>
           <div class="ml-auto">
             <button
-              class="rounded-full border border-sage/50 px-4 py-1.5 text-sm font-medium text-sage transition hover:bg-sage/5"
+              class="rounded-full border border-[var(--color-accent)]/50 px-4 py-1.5 text-sm font-medium text-[var(--color-accent)] transition hover:bg-[var(--color-accent)]/10"
               @click="showTransactionForm = !showTransactionForm"
             >
               {{ showTransactionForm ? 'Masquer le formulaire' : 'Nouvelle transaction' }}
             </button>
           </div>
         </div>
-        <form v-if="showTransactionForm" class="space-y-3 rounded-2xl bg-mist/50 p-4" @submit.prevent="submitTransaction">
-          <div class="flex items-center justify-between text-xs text-gray-500">
+        <form v-if="showTransactionForm" class="space-y-3 rounded-2xl bg-[var(--color-bg-muted)] dark:bg-[var(--glass-bg)] p-4 border border-[var(--color-border)]" @submit.prevent="submitTransaction">
+          <div class="flex items-center justify-between text-xs text-[var(--color-text-secondary)]">
             <span class="uppercase tracking-[0.3em]">{{ editingTransactionId ? 'Modifier la transaction' : 'Nouvelle transaction' }}</span>
             <button v-if="editingTransactionId" type="button" class="text-rose-600 hover:underline" @click="cancelTransactionEdit">Annuler</button>
           </div>
           <div class="grid gap-2 md:grid-cols-2">
-            <select v-model="transactionForm.accountId" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm text-gray-600">
+            <select v-model="transactionForm.accountId" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
               <option disabled value="">Choisir un compte</option>
               <option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option>
             </select>
-            <select v-model="transactionForm.type" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm text-gray-600">
+            <select v-model="transactionForm.type" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
               <option value="expense">Dépense</option>
               <option value="income">Revenu</option>
             </select>
           </div>
           <div class="grid gap-2 md:grid-cols-2">
-            <select v-model="transactionForm.categoryId" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm text-gray-600">
+            <select v-model="transactionForm.categoryId" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
               <option disabled value="">Catégorie</option>
               <option v-for="category in filteredCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
             </select>
-            <input v-model="transactionForm.label" type="text" placeholder="Libellé" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm" />
+            <input v-model="transactionForm.label" type="text" placeholder="Libellé" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
           </div>
           <div class="grid gap-2 md:grid-cols-3">
-            <input v-model="transactionForm.amount" type="number" min="0" step="0.01" placeholder="Montant" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm" />
-            <input v-model="transactionForm.date" type="date" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm" />
-            <select v-model="transactionForm.noteId" class="rounded-2xl border border-gray-200 bg-white/80 px-3 py-2 text-sm text-gray-600">
+            <input v-model="transactionForm.amount" type="number" min="0" step="0.01" placeholder="Montant" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+            <input v-model="transactionForm.date" type="date" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+            <select v-model="transactionForm.noteId" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
               <option value="">Associer une note</option>
               <option v-for="note in notes" :key="note.id" :value="note.id">{{ note.title }}</option>
             </select>
           </div>
-          <button class="w-full rounded-full bg-sage py-2 text-sm font-medium text-anthracite" type="submit">
+          <button class="w-full rounded-full bg-[var(--color-accent)] py-2 text-sm font-medium text-white" type="submit">
             {{ editingTransactionId ? 'Mettre à jour' : 'Enregistrer' }}
           </button>
         </form>
         <div class="overflow-x-auto">
-          <table class="min-w-full text-left text-sm text-gray-600">
+          <table class="min-w-full text-left text-sm text-[var(--color-text-secondary)]">
             <thead>
-              <tr class="text-xs uppercase tracking-[0.2em] text-gray-400">
+              <tr class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
                 <th class="py-2">Date</th>
                 <th>Libellé</th>
                 <th>Compte</th>
@@ -856,12 +856,12 @@ function switchPlannerMode(mode: PlannerMode) {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="transaction in transactions" :key="transaction.id" class="border-t border-gray-100">
-                <td class="py-3 text-gray-500">{{ new Date(transaction.date).toLocaleDateString() }}</td>
-                <td class="font-medium text-ink">{{ transaction.label }}</td>
-                <td>{{ transaction.accountName || '—' }}</td>
+              <tr v-for="transaction in transactions" :key="transaction.id" class="border-t border-[var(--color-border)]">
+                <td class="py-3 text-[var(--color-text-secondary)]">{{ new Date(transaction.date).toLocaleDateString() }}</td>
+                <td class="font-medium text-[var(--color-text-primary)]">{{ transaction.label }}</td>
+                <td class="text-[var(--color-text-secondary)]">{{ transaction.accountName || '—' }}</td>
                 <td>
-                  <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs" :class="transaction.categoryColor || 'bg-gray-100 text-gray-600'">
+                  <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs" :class="transaction.categoryColor || 'bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)]'">
                     {{ transaction.categoryName || 'N/A' }}
                   </span>
                 </td>
@@ -876,7 +876,7 @@ function switchPlannerMode(mode: PlannerMode) {
                 </td>
                 <td>
                   <select
-                    class="w-full rounded-full border border-gray-200 bg-white/80 px-3 py-1 text-xs text-gray-600"
+                    class="w-full rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-1 text-xs text-[var(--color-text-primary)]"
                     :value="transaction.noteId || ''"
                     @change="(event) => handleNoteLink(transaction.id, event)"
                   >
@@ -887,14 +887,14 @@ function switchPlannerMode(mode: PlannerMode) {
                 <td class="text-right">
                   <div class="flex justify-end gap-2 text-base">
                     <button
-                      class="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 transition hover:bg-gray-200 hover:text-sage"
+                      class="rounded-full bg-[var(--color-bg-muted)] px-2 py-1 text-xs text-[var(--color-text-secondary)] transition hover:bg-[var(--color-accent)] hover:text-white"
                       aria-label="Éditer"
                       @click="startEditTransaction(transaction)"
                     >
                       ✎
                     </button>
                     <button
-                      class="rounded-full bg-rose-50 px-2 py-1 text-xs text-rose-600 transition hover:bg-rose-100"
+                      class="rounded-full bg-rose-50 dark:bg-rose-900/30 px-2 py-1 text-xs text-rose-600 transition hover:bg-rose-100 dark:hover:bg-rose-900/50"
                       aria-label="Supprimer"
                       @click="requestDeleteTransaction(transaction.id)"
                     >
@@ -908,104 +908,104 @@ function switchPlannerMode(mode: PlannerMode) {
         </div>
       </section>
 
-      <section class="space-y-4 rounded-[28px] bg-white/95 p-5 shadow-card">
+      <section class="space-y-4 rounded-[28px] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] p-5 shadow-card border border-[var(--color-border)]">
         <div class="flex flex-wrap items-start gap-3">
           <div class="space-y-1">
-            <h3 class="font-display text-xl text-ink">Planifications & banques</h3>
-            <p class="text-sm text-gray-500">Visualisez vos voyages à venir et les comptes qui les financent.</p>
+            <h3 class="font-display text-xl text-[var(--color-text-primary)]">Planifications & banques</h3>
+            <p class="text-sm text-[var(--color-text-secondary)]">Visualisez vos voyages à venir et les comptes qui les financent.</p>
           </div>
           <div class="ml-auto flex flex-wrap gap-2">
-            <button class="rounded-full bg-sage px-5 py-2 text-sm font-medium text-anthracite shadow-sm" @click="startTripPlanning()">Plan vacances</button>
-            <button class="rounded-full border border-emerald-400 px-5 py-2 text-sm font-medium text-emerald-600 hover:bg-emerald-50" @click="startBankPlanning()">Ajouter une banque</button>
+            <button class="rounded-full bg-[var(--color-accent)] px-5 py-2 text-sm font-medium text-white shadow-sm" @click="startTripPlanning()">Plan vacances</button>
+            <button class="rounded-full border border-emerald-400 dark:border-emerald-600 px-5 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30" @click="startBankPlanning()">Ajouter une banque</button>
           </div>
         </div>
         <div class="grid gap-4 xl:grid-cols-2">
-          <div class="rounded-[26px] border border-sage/20 bg-white/60 p-4 shadow-inner">
+          <div class="rounded-[26px] border border-[var(--color-border)] bg-[var(--color-bg-muted)] dark:bg-[var(--glass-bg)] p-4 shadow-inner">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="text-lg">✈️</span>
                 <div>
-                  <p class="text-sm font-semibold text-ink">Plans vacances</p>
-                  <p class="text-xs text-gray-500">{{ availableTripPlans.length }} plan(s) suivi(s)</p>
+                  <p class="text-sm font-semibold text-[var(--color-text-primary)]">Plans vacances</p>
+                  <p class="text-xs text-[var(--color-text-secondary)]">{{ availableTripPlans.length }} plan(s) suivi(s)</p>
                 </div>
               </div>
             </div>
-            <div v-if="!availableTripPlans.length" class="mt-4 rounded-2xl border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+            <div v-if="!availableTripPlans.length" class="mt-4 rounded-2xl border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-text-secondary)]">
               Aucun plan enregistré pour le moment.
             </div>
             <div v-else class="mt-4 space-y-3 overflow-y-auto pr-1" style="max-height: 280px">
               <article
                 v-for="plan in availableTripPlans"
                 :key="plan.id"
-                class="rounded-2xl border border-white/70 bg-mist/40 p-4"
+                class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)]/60 p-4"
               >
                 <div class="flex flex-wrap items-start gap-3">
                   <div class="space-y-1">
-                    <p class="font-semibold text-ink">{{ plan.title }}</p>
-                    <p class="text-xs text-gray-500">
+                    <p class="font-semibold text-[var(--color-text-primary)]">{{ plan.title }}</p>
+                    <p class="text-xs text-[var(--color-text-secondary)]">
                       {{ new Date(plan.startDate).toLocaleDateString() }} → {{ new Date(plan.endDate).toLocaleDateString() }} · {{ plan.durationDays }} j
                     </p>
-                    <p class="text-xs text-gray-500">
+                    <p class="text-xs text-[var(--color-text-secondary)]">
                       Budget estimé
-                      <span class="font-medium text-ink">
+                      <span class="font-medium text-[var(--color-text-primary)]">
                         {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(plan.estimatedTotal) }}
                       </span>
                     </p>
-                    <p v-if="plan.linkedBankProfileId" class="text-xs text-gray-500">
+                    <p v-if="plan.linkedBankProfileId" class="text-xs text-[var(--color-text-secondary)]">
                       Banque liée : {{ availableBankProfiles.find((profile) => profile.id === plan.linkedBankProfileId)?.bankName || '—' }}
                     </p>
                   </div>
                   <div class="ml-auto flex gap-2 text-xs">
-                    <button class="rounded-full bg-white px-3 py-1 text-gray-600 shadow-sm hover:text-sage" @click="startTripPlanning(plan)">Éditer</button>
-                    <button class="rounded-full bg-rose-50 px-3 py-1 text-rose-600 hover:bg-rose-100" @click="requestDeleteTrip(plan.id)">Suppr.</button>
+                    <button class="rounded-full bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] border border-[var(--color-border)] px-3 py-1 text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]" @click="startTripPlanning(plan)">Éditer</button>
+                    <button class="rounded-full bg-rose-50 dark:bg-rose-900/30 px-3 py-1 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/50" @click="requestDeleteTrip(plan.id)">Suppr.</button>
                   </div>
                 </div>
               </article>
             </div>
           </div>
 
-          <div class="rounded-[26px] border border-emerald/20 bg-white/60 p-4 shadow-inner">
+          <div class="rounded-[26px] border border-[var(--color-border)] bg-[var(--color-bg-muted)] dark:bg-[var(--glass-bg)] p-4 shadow-inner">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="text-lg">🏦</span>
                 <div>
-                  <p class="text-sm font-semibold text-ink">Comptes bancaires</p>
-                  <p class="text-xs text-gray-500">{{ availableBankProfiles.length }} compte(s) suivi(s)</p>
+                  <p class="text-sm font-semibold text-[var(--color-text-primary)]">Comptes bancaires</p>
+                  <p class="text-xs text-[var(--color-text-secondary)]">{{ availableBankProfiles.length }} compte(s) suivi(s)</p>
                 </div>
               </div>
             </div>
-            <div v-if="!availableBankProfiles.length" class="mt-4 rounded-2xl border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+            <div v-if="!availableBankProfiles.length" class="mt-4 rounded-2xl border border-dashed border-[var(--color-border)] p-4 text-sm text-[var(--color-text-secondary)]">
               Ajoutez vos banques pour suivre les enveloppes dédiées au voyage.
             </div>
             <div v-else class="mt-4 space-y-3 overflow-y-auto pr-1" style="max-height: 280px">
               <article
                 v-for="profile in availableBankProfiles"
                 :key="profile.id"
-                class="rounded-2xl border border-white/70 bg-emerald-50/40 p-4"
+                class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)]/60 p-4"
               >
                 <div class="flex flex-wrap items-start gap-3">
                   <div class="space-y-1">
-                    <p class="font-semibold text-ink">{{ profile.bankName }} · {{ profile.accountLabel }}</p>
-                    <p class="text-xs text-gray-500">
+                    <p class="font-semibold text-[var(--color-text-primary)]">{{ profile.bankName }} · {{ profile.accountLabel }}</p>
+                    <p class="text-xs text-[var(--color-text-secondary)]">
                       Solde
-                      <span class="font-medium text-emerald-700">
+                      <span class="font-medium text-emerald-600">
                         {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: profile.currency }).format(profile.balance) }}
                       </span>
                     </p>
-                    <div v-if="profile.target" class="space-y-1 text-xs text-gray-500">
+                    <div v-if="profile.target" class="space-y-1 text-xs text-[var(--color-text-secondary)]">
                       <p>Objectif {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: profile.currency }).format(profile.target) }}</p>
-                      <div class="h-1.5 w-full rounded-full bg-white/70">
+                      <div class="h-1.5 w-full rounded-full bg-[var(--color-border)]">
                         <div
                           class="h-full rounded-full bg-emerald-500"
                           :style="{ width: `${Math.min(100, (profile.balance / profile.target) * 100)}%` }"
                         ></div>
                       </div>
                     </div>
-                    <p v-if="profile.notes" class="text-xs text-gray-500">{{ profile.notes }}</p>
+                    <p v-if="profile.notes" class="text-xs text-[var(--color-text-secondary)]">{{ profile.notes }}</p>
                   </div>
                   <div class="ml-auto flex gap-2 text-xs">
-                    <button class="rounded-full bg-white px-3 py-1 text-gray-600 shadow-sm hover:text-sage" @click="startBankPlanning(profile)">Éditer</button>
-                    <button class="rounded-full bg-rose-50 px-3 py-1 text-rose-600 hover:bg-rose-100" @click="requestDeleteBankProfile(profile.id)">Suppr.</button>
+                    <button class="rounded-full bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] border border-[var(--color-border)] px-3 py-1 text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]" @click="startBankPlanning(profile)">Éditer</button>
+                    <button class="rounded-full bg-rose-50 dark:bg-rose-900/30 px-3 py-1 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/50" @click="requestDeleteBankProfile(profile.id)">Suppr.</button>
                   </div>
                 </div>
               </article>
@@ -1016,41 +1016,41 @@ function switchPlannerMode(mode: PlannerMode) {
     </div>
 
     <transition name="fade">
-      <div v-if="plannerOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div class="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[32px] bg-white p-6 shadow-2xl">
+      <div v-if="plannerOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[32px] bg-[var(--color-bg-surface)] dark:bg-[var(--surface)] p-6 shadow-2xl border border-[var(--color-border)]">
           <div class="flex flex-wrap items-center gap-3">
             <div>
-              <p class="text-xs uppercase tracking-[0.3em] text-gray-400">Assistant budget</p>
-              <h3 class="font-display text-2xl text-ink">{{ plannerMode === 'vacation' ? 'Plan vacances' : 'Gestion bancaire' }}</h3>
+              <p class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Assistant budget</p>
+              <h3 class="font-display text-2xl text-[var(--color-text-primary)]">{{ plannerMode === 'vacation' ? 'Plan vacances' : 'Gestion bancaire' }}</h3>
             </div>
-            <div class="ml-auto flex rounded-full border border-gray-200 bg-gray-100 p-1 text-sm">
+            <div class="ml-auto flex rounded-full border border-[var(--color-border)] bg-[var(--color-bg-muted)] p-1 text-sm">
               <button
                 class="rounded-full px-4 py-1"
-                :class="plannerMode === 'vacation' ? 'bg-white text-ink shadow-sm' : 'text-gray-500'"
+                :class="plannerMode === 'vacation' ? 'bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] text-[var(--color-text-primary)] shadow-sm' : 'text-[var(--color-text-secondary)]'"
                 @click="switchPlannerMode('vacation')"
               >
                 Vacances
               </button>
               <button
                 class="rounded-full px-4 py-1"
-                :class="plannerMode === 'bank' ? 'bg-white text-ink shadow-sm' : 'text-gray-500'"
+                :class="plannerMode === 'bank' ? 'bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] text-[var(--color-text-primary)] shadow-sm' : 'text-[var(--color-text-secondary)]'"
                 @click="switchPlannerMode('bank')"
               >
                 Banque
               </button>
             </div>
-            <button class="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 hover:bg-gray-200" @click="cancelPlanner">Fermer</button>
+            <button class="rounded-full bg-[var(--color-bg-muted)] dark:bg-[var(--glass-bg)] border border-[var(--color-border)] px-3 py-1 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface)]" @click="cancelPlanner">Fermer</button>
           </div>
 
           <div v-if="plannerMode === 'vacation'" class="mt-6 space-y-5">
             <div class="grid gap-3 md:grid-cols-2">
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Titre du voyage</label>
-                <input v-model="tripForm.title" type="text" placeholder="Ex. Roadtrip Lisbonne" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Titre du voyage</label>
+                <input v-model="tripForm.title" type="text" placeholder="Ex. Roadtrip Lisbonne" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Banque liée</label>
-                <select v-model="tripForm.linkedBankProfileId" class="w-full rounded-2xl border border-gray-200 px-4 py-2">
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Banque liée</label>
+                <select v-model="tripForm.linkedBankProfileId" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]">
                   <option value="">Aucune</option>
                   <option v-for="profile in availableBankProfiles" :key="profile.id" :value="profile.id">{{ profile.bankName }} · {{ profile.accountLabel }}</option>
                 </select>
@@ -1058,149 +1058,149 @@ function switchPlannerMode(mode: PlannerMode) {
             </div>
             <div class="grid gap-3 md:grid-cols-3">
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Début</label>
-                <input v-model="tripForm.startDate" type="date" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Début</label>
+                <input v-model="tripForm.startDate" type="date" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Fin</label>
-                <input v-model="tripForm.endDate" type="date" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Fin</label>
+                <input v-model="tripForm.endDate" type="date" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Durée estimée</label>
-                <p class="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-2 text-sm text-gray-600">{{ tripDurationDays }} jour(s)</p>
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Durée estimée</label>
+                <p class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-muted)] px-4 py-2 text-sm text-[var(--color-text-primary)]">{{ tripDurationDays }} jour(s)</p>
               </div>
             </div>
 
-            <div class="space-y-3 rounded-2xl border border-dashed border-gray-200 p-4">
+            <div class="space-y-3 rounded-2xl border border-dashed border-[var(--color-border)] p-4">
               <div class="flex items-center justify-between">
-                <h4 class="text-sm font-semibold text-ink">Segments de transport</h4>
-                <button class="text-sm text-sage" @click="addTransportSegment">+ Ajouter un segment</button>
+                <h4 class="text-sm font-semibold text-[var(--color-text-primary)]">Segments de transport</h4>
+                <button class="text-sm text-[var(--color-accent)]" @click="addTransportSegment">+ Ajouter un segment</button>
               </div>
               <div v-for="segment in tripForm.transports" :key="segment.id" class="grid gap-2 md:grid-cols-[1fr,1fr,120px,auto]">
-                <select v-model="segment.mode" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm">
+                <select v-model="segment.mode" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
                   <option v-for="mode in transportModes" :key="mode.value" :value="mode.value">{{ mode.label }}</option>
                 </select>
-                <input v-model="segment.label" type="text" placeholder="Libellé" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
-                <input v-model="segment.cost" type="number" min="0" step="10" placeholder="Coût (€)" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
+                <input v-model="segment.label" type="text" placeholder="Libellé" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+                <input v-model="segment.cost" type="number" min="0" step="10" placeholder="Coût (€)" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
                 <div class="flex items-center gap-2">
-                  <input v-model="segment.notes" type="text" placeholder="Notes" class="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
-                  <button class="text-rose-500" @click.prevent="removeTransportSegment(segment.id)">✕</button>
+                  <input v-model="segment.notes" type="text" placeholder="Notes" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+                  <button class="text-rose-500 hover:text-rose-600" @click.prevent="removeTransportSegment(segment.id)">✕</button>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-3 rounded-2xl border border-dashed border-gray-200 p-4">
+            <div class="space-y-3 rounded-2xl border border-dashed border-[var(--color-border)] p-4">
               <div class="flex items-center justify-between">
-                <h4 class="text-sm font-semibold text-ink">Hébergement</h4>
-                <label class="flex items-center gap-2 text-sm text-gray-600">
-                  <input v-model="tripForm.lodgingEnabled" type="checkbox" class="rounded border-gray-300 text-sage focus:ring-sage" />
+                <h4 class="text-sm font-semibold text-[var(--color-text-primary)]">Hébergement</h4>
+                <label class="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+                  <input v-model="tripForm.lodgingEnabled" type="checkbox" class="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" />
                   Suivre les nuits
                 </label>
               </div>
               <div v-if="tripForm.lodgingEnabled" class="grid gap-2 md:grid-cols-4">
-                <input v-model="tripForm.lodging.checkIn" type="date" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
-                <input v-model="tripForm.lodging.checkOut" type="date" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
-                <input v-model="tripForm.lodging.rate" type="number" min="0" step="10" placeholder="€/nuit" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
-                <p class="rounded-2xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-600">Total : {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(lodgingTotal) }}</p>
+                <input v-model="tripForm.lodging.checkIn" type="date" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+                <input v-model="tripForm.lodging.checkOut" type="date" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+                <input v-model="tripForm.lodging.rate" type="number" min="0" step="10" placeholder="€/nuit" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+                <p class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-muted)] px-3 py-2 text-sm text-[var(--color-text-primary)]">Total : {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(lodgingTotal) }}</p>
               </div>
             </div>
 
-            <div class="space-y-3 rounded-2xl border border-dashed border-gray-200 p-4">
+            <div class="space-y-3 rounded-2xl border border-dashed border-[var(--color-border)] p-4">
               <div class="flex items-center justify-between">
-                <h4 class="text-sm font-semibold text-ink">Activités & repas</h4>
-                <button class="text-sm text-sage" @click="addActivityEstimate">+ Ajouter une ligne</button>
+                <h4 class="text-sm font-semibold text-[var(--color-text-primary)]">Activités & repas</h4>
+                <button class="text-sm text-[var(--color-accent)]" @click="addActivityEstimate">+ Ajouter une ligne</button>
               </div>
               <div v-for="activity in tripForm.activities" :key="activity.id" class="grid gap-2 md:grid-cols-[1fr,1fr,120px,auto]">
-                <select v-model="activity.type" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm">
+                <select v-model="activity.type" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
                   <option v-for="type in activityTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
                 </select>
-                <input v-model="activity.label" type="text" placeholder="Libellé" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
-                <input v-model="activity.cost" type="number" min="0" step="10" placeholder="Coût (€)" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
+                <input v-model="activity.label" type="text" placeholder="Libellé" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+                <input v-model="activity.cost" type="number" min="0" step="10" placeholder="Coût (€)" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
                 <div class="flex items-center gap-2">
-                  <input v-model="activity.notes" type="text" placeholder="Notes" class="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
-                  <button class="text-rose-500" @click.prevent="removeActivityEstimate(activity.id)">✕</button>
+                  <input v-model="activity.notes" type="text" placeholder="Notes" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+                  <button class="text-rose-500 hover:text-rose-600" @click.prevent="removeActivityEstimate(activity.id)">✕</button>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-3 rounded-2xl border border-dashed border-gray-200 p-4">
+            <div class="space-y-3 rounded-2xl border border-dashed border-[var(--color-border)] p-4">
               <div class="flex items-center justify-between">
-                <h4 class="text-sm font-semibold text-ink">Alertes & rappels</h4>
-                <button class="text-sm text-sage" @click="addAlertReminder">+ Ajouter un rappel</button>
+                <h4 class="text-sm font-semibold text-[var(--color-text-primary)]">Alertes & rappels</h4>
+                <button class="text-sm text-[var(--color-accent)]" @click="addAlertReminder">+ Ajouter un rappel</button>
               </div>
               <div v-for="alert in tripForm.alerts" :key="alert.id" class="grid gap-2 md:grid-cols-[1fr,1fr,auto]">
-                <input v-model="alert.label" type="text" placeholder="Ex. Réserver billets" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
+                <input v-model="alert.label" type="text" placeholder="Ex. Réserver billets" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
                 <div class="grid gap-2 md:grid-cols-2">
-                  <input v-model="alert.targetDate" type="date" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm" />
-                  <select v-model="alert.status" class="rounded-2xl border border-gray-200 px-3 py-2 text-sm">
+                  <input v-model="alert.targetDate" type="date" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]" />
+                  <select v-model="alert.status" class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]">
                     <option value="todo">À faire</option>
                     <option value="done">Terminé</option>
                   </select>
                 </div>
                 <div class="flex items-center gap-3">
-                  <label class="flex items-center gap-2 text-xs text-gray-500">
-                    <input v-model="alert.notifySystem" type="checkbox" class="rounded border-gray-300 text-sage focus:ring-sage" />
+                  <label class="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
+                    <input v-model="alert.notifySystem" type="checkbox" class="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" />
                     Notifier système
                   </label>
-                  <button class="text-rose-500" @click.prevent="removeAlertReminder(alert.id)">✕</button>
+                  <button class="text-rose-500 hover:text-rose-600" @click.prevent="removeAlertReminder(alert.id)">✕</button>
                 </div>
               </div>
             </div>
 
             <div class="space-y-2">
-              <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Notes</label>
-              <textarea v-model="tripForm.notes" rows="3" placeholder="Informations additionnelles" class="w-full rounded-2xl border border-gray-200 px-4 py-2"></textarea>
+              <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Notes</label>
+              <textarea v-model="tripForm.notes" rows="3" placeholder="Informations additionnelles" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]"></textarea>
             </div>
 
-            <div class="rounded-2xl bg-mist/60 p-4 text-sm text-gray-700">
-              <p class="font-semibold text-ink">Estimation globale : {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(tripEstimates.total) }}</p>
-              <p class="text-xs text-gray-500">Transport {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(tripEstimates.transport) }} · Activités {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(tripEstimates.activities) }} · Hébergement {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(tripEstimates.lodging) }}</p>
+            <div class="rounded-2xl bg-[var(--color-bg-muted)] dark:bg-[var(--glass-bg)] border border-[var(--color-border)] p-4 text-sm text-[var(--color-text-primary)]">
+              <p class="font-semibold">Estimation globale : {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(tripEstimates.total) }}</p>
+              <p class="text-xs text-[var(--color-text-secondary)]">Transport {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(tripEstimates.transport) }} · Activités {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(tripEstimates.activities) }} · Hébergement {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: summary.currency }).format(tripEstimates.lodging) }}</p>
             </div>
 
             <div class="flex flex-wrap justify-end gap-3">
-              <button class="rounded-full border border-gray-300 px-5 py-2 text-sm text-gray-600" @click="cancelPlanner">Annuler</button>
-              <button class="rounded-full bg-sage px-5 py-2 text-sm text-anthracite" @click="submitTripPlan">{{ tripForm.id ? 'Mettre à jour' : 'Créer le plan' }}</button>
+              <button class="rounded-full border border-[var(--color-border)] px-5 py-2 text-sm text-[var(--color-text-secondary)]" @click="cancelPlanner">Annuler</button>
+              <button class="rounded-full bg-[var(--color-accent)] px-5 py-2 text-sm text-white" @click="submitTripPlan">{{ tripForm.id ? 'Mettre à jour' : 'Créer le plan' }}</button>
             </div>
           </div>
 
           <div v-else class="mt-6 space-y-4">
             <div class="grid gap-3 md:grid-cols-2">
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Nom de la banque</label>
-                <input v-model="bankForm.bankName" type="text" placeholder="Ex. Banque Nationale" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Nom de la banque</label>
+                <input v-model="bankForm.bankName" type="text" placeholder="Ex. Banque Nationale" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Libellé du compte</label>
-                <input v-model="bankForm.accountLabel" type="text" placeholder="Courant / Épargne" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Libellé du compte</label>
+                <input v-model="bankForm.accountLabel" type="text" placeholder="Courant / Épargne" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
             </div>
             <div class="grid gap-3 md:grid-cols-3">
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Numéro (facultatif)</label>
-                <input v-model="bankForm.accountNumber" type="text" placeholder="IBAN" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Numéro (facultatif)</label>
+                <input v-model="bankForm.accountNumber" type="text" placeholder="IBAN" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Devise</label>
-                <input v-model="bankForm.currency" type="text" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Devise</label>
+                <input v-model="bankForm.currency" type="text" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Objectif (€)</label>
-                <input v-model="bankForm.target" type="number" min="0" step="100" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Objectif (€)</label>
+                <input v-model="bankForm.target" type="number" min="0" step="100" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
             </div>
             <div class="grid gap-3 md:grid-cols-2">
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Solde suivi</label>
-                <input v-model="bankForm.balance" type="number" min="0" step="10" class="w-full rounded-2xl border border-gray-200 px-4 py-2" />
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Solde suivi</label>
+                <input v-model="bankForm.balance" type="number" min="0" step="10" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]" />
               </div>
               <div class="space-y-2">
-                <label class="text-xs uppercase tracking-[0.3em] text-gray-500">Notes</label>
-                <textarea v-model="bankForm.notes" rows="3" placeholder="Commentaires, conditions…" class="w-full rounded-2xl border border-gray-200 px-4 py-2"></textarea>
+                <label class="text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)]">Notes</label>
+                <textarea v-model="bankForm.notes" rows="3" placeholder="Commentaires, conditions…" class="w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] dark:bg-[var(--glass-bg)] px-4 py-2 text-[var(--color-text-primary)]"></textarea>
               </div>
             </div>
 
             <div class="flex flex-wrap justify-end gap-3">
-              <button class="rounded-full border border-gray-300 px-5 py-2 text-sm text-gray-600" @click="cancelPlanner">Annuler</button>
+              <button class="rounded-full border border-[var(--color-border)] px-5 py-2 text-sm text-[var(--color-text-secondary)]" @click="cancelPlanner">Annuler</button>
               <button class="rounded-full bg-emerald-500 px-5 py-2 text-sm text-white" @click="submitBankProfile">{{ bankForm.id ? 'Mettre à jour' : 'Enregistrer la banque' }}</button>
             </div>
           </div>

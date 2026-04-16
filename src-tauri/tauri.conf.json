@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "notionlike",
+  "productName": "Le Bocal",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.lebocal.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5175",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "LeBocal",
+        "title": "Le Bocal",
         "width": 1200,
         "height": 800,
         "resizable": true,
@@ -20,7 +20,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://i.pravatar.cc"
     }
   },
   "bundle": {
@@ -33,5 +33,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
   }
 }

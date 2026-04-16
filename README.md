@@ -14,6 +14,68 @@ Le Bocal est une application desktop (Tauri + Vue 3) pensée pour l’écriture 
 - **Page Paramètres** : gestion des raccourcis personnalisés (capture, détection des conflits, reset)
 - **Budget Workspace** : suivi des comptes (banque, vacances, épargne, cash) avec tableau transactions et note-linking rapide
 - **Planificateur vacances / banques** : modale multi-sections (période, transports cumulables, hébergement par nuit, activités, alertes, notes) et bloc indépendant pour gérer plusieurs profils bancaires
+- **Intégration Notion** : synchronisation bidirectionnelle avec l'API Notion (compte gratuit supporté)
+
+## Intégration Notion
+
+### Configuration (compte gratuit supporté)
+
+1. **Créer une intégration Notion** :
+   - Aller sur [notion.so/my-integrations](https://www.notion.so/my-integrations)
+   - Cliquer sur "New integration"
+   - Nommer l'intégration (ex: "Le Bocal Sync")
+   - Sélectionner ton workspace (fonctionne avec le plan gratuit)
+   - Copier le **Internal Integration Token** (commence par `secret_...`)
+
+2. **Partager une page avec l'intégration** :
+   - Dans Notion, ouvrir la page où tu veux synchroniser
+   - Cliquer sur "..." (menu) → "Add connections"
+   - Sélectionner ton intégration "Le Bocal Sync"
+
+### Commandes Tauri disponibles
+
+| Commande | Description |
+|----------|-------------|
+| `notion_connect(token: String)` → `NotionConfig` | Connecte avec le token API |
+| `notion_disconnect()` → `void` | Déconnecte et réinitialise |
+| `notion_status()` → `NotionSyncStatus` | État de la dernière sync |
+| `notion_search(query: String)` → `NotionSearchResult[]` | Recherche de pages |
+| `notion_get_page(page_id: String)` → `NotionPageDetail` | Détails d'une page |
+| `notion_push_note(note_id: String, parent_page_id: String)` → `NotionPage` | Envoie une note |
+| `notion_push_all_notes(parent_page_id: String)` → `NotionPage[]` | Envoie toutes les notes |
+
+### Exemple d'utilisation (frontend Vue)
+
+```typescript
+import { invoke } from '@tauri-apps/api/core'
+
+// 1. Connexion
+const config = await invoke('notion_connect', {
+  access_token: 'secret_ton_token_ici'
+})
+console.log('Connecté à Notion:', config.workspace_name)
+
+// 2. Rechercher une page destination
+const results = await invoke('notion_search', { query: 'Notes Le Bocal' })
+const parentPage = results[0] // Sélectionner la première page trouvée
+
+// 3. Envoyer une note spécifique
+const page = await invoke('notion_push_note', {
+  note_id: 'uuid-de-la-note',
+  parent_page_id: parentPage.id
+})
+console.log('Note créée:', page.url) // Lien direct vers la page Notion
+
+// 4. Déconnexion
+await invoke('notion_disconnect')
+```
+
+### Fonctionnalités de conversion
+
+- **Markdown → Notion** : Titres (`#`, `##`), listes (`-`, `*`), checklists (`- [ ]`), code (`` ` ``), paragraphes
+- **Notes → Markdown** : Titre, résumé, tâches avec état, blocs Editor.js (texte, code, checklist)
+
+**Limitation API** : Maximum 100 blocs par page créée (limite Notion officielle).
 
 ## Stack technique
 
